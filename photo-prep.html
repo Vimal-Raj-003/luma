@@ -1,0 +1,10 @@
+<!doctype html>
+<!-- DEV-ONLY: exports the retouched stills used by the photographic story (tools/prep-photos.mjs). Not shipped. -->
+<html><head><meta charset="UTF-8"><title>photo prep</title><link rel="icon" href="data:," /></head>
+<body><script type="module">
+  import { prep } from '/tools/hero-render/prep.js'
+  window.__prep = async () => {
+    const P = await prep()
+    return Object.fromEntries(Object.entries(P).map(([k, c]) => [k, c.toDataURL('image/jpeg', 0.9)]))
+  }
+</script></body></html>

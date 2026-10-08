@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Nav from './components/Nav'
-import Stage from './components/Stage'
+import VideoHero from './components/VideoHero'
+import PhotoStory from './components/PhotoStory'
 import FlavourSelector from './components/FlavourSelector'
 import Marquee from './components/Marquee'
 import Flavours from './components/Flavours'
@@ -17,7 +18,6 @@ import { preloadAssets } from './assets'
 
 export default function App() {
   const [ready, setReady] = useState(false)
-  const [formed, setFormed] = useState(false)
   useReveal()
   useMicro()
 
@@ -37,9 +37,10 @@ export default function App() {
 
   return (
     <>
-      <Nav ready={formed} />
+      <Nav ready={ready} />
       <main>
-        <Stage ready={ready} onFormed={() => setFormed(true)} />
+        <VideoHero />
+        <PhotoStory />
         <FlavourSelector />
         <Marquee />
         <Flavours />

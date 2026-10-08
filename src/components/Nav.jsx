@@ -20,7 +20,7 @@ export default function Nav({ ready }) {
   const [solid, setSolid] = useState(false)
 
   useEffect(() => {
-    const on = () => setSolid(window.scrollY > 24)
+    const on = () => setSolid(window.scrollY > window.innerHeight * 0.82) // over the dark video until it has scrolled away
     on()
     window.addEventListener('scroll', on, { passive: true })
     return () => window.removeEventListener('scroll', on)
@@ -51,7 +51,7 @@ export default function Nav({ ready }) {
   }
 
   return (
-    <header className={`nav${solid ? ' solid' : ''}`}>
+    <header className={`nav${solid ? ' solid' : ' on-dark'}`}>
       <div className="nav-in">
         <Logo />
         <nav className="nav-links" aria-label="Primary">

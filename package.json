@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "assets": "node tools/make-assets.mjs",
-    "hero:render": "node tools/render-hero.mjs"
+    "hero:render": "node tools/render-hero.mjs",
+    "photos:prep": "node tools/prep-photos.mjs"
   },
   "dependencies": {
     "gsap": "^3.15.0",
