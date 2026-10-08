@@ -169,7 +169,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .stage-copy { display: grid; align-content: start; }
 .stage-copy > * { grid-area: 1 / 1; }
 .hero-copy { text-align: center; padding-top: 16px; }
-.story-copy { text-align: center; pointer-events: none; }
 .js .stage:not(.rm) .story-copy { opacity: 0; }
 .stage.rm .story-copy { display: none; }
 .hero-copy h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(2.9rem, 14vw, 4.6rem); line-height: 0.96; letter-spacing: -0.035em; font-variation-settings: 'opsz' 144; }
@@ -191,16 +190,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .sg1, .sg2, .sg3 { will-change: transform; }
 .sg3 svg { width: 100%; height: 100%; }
 
-/* story copy inside the scene */
-.story-copy .h2 { font-size: clamp(2rem, 9vw, 3rem); }
-.story-copy .eyebrow { display: none; }
-.steps { position: relative; margin-top: 0.8rem; }
-.step { display: none; align-items: center; gap: 1rem; text-align: left; padding: 0.9rem 1.1rem; border-radius: 20px; background: rgba(255, 255, 255, 0.82); border: 1px solid var(--line); backdrop-filter: blur(8px); }
-.step.active { display: flex; animation: stepIn 0.7s var(--ease); }
-@keyframes stepIn { from { opacity: 0; transform: translateY(16px) scale(0.97); } to { opacity: 1; transform: none; } }
-.step-n { font-family: var(--serif); font-style: italic; font-size: 1.6rem; color: var(--rose-d); min-width: 2.2rem; }
-.step h3 { font-family: var(--serif); font-weight: 500; font-size: 1.25rem; line-height: 1.2; }
-.step p { color: var(--muted); font-size: 0.9rem; line-height: 1.4; }
 
 .chip { position: absolute; z-index: 4; left: var(--mx); top: var(--my); display: grid; justify-items: center; gap: 4px; width: clamp(64px, 17vw, 88px); will-change: transform, opacity; pointer-events: none; }
 .js .stage:not(.rm) .chip { opacity: 0; }
@@ -220,23 +209,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .hero-sub { margin-left: 0; font-size: 1.2rem; }
   .hero-cta { justify-content: flex-start; margin-top: 2rem; }
   .stage-visual { --mh: min(78svh, 700px); order: 0; margin-bottom: 0; }
-  .story-copy { text-align: left; }
-  .story-copy .eyebrow { display: block; }
-  .story-copy .h2 { font-size: clamp(2.6rem, 5vw, 4.4rem); margin-bottom: 1.8rem; }
-  .steps { display: grid; gap: 0.15rem; padding-left: 0; }
-  .steps::before, .steps::after { content: ''; z-index: 0; position: absolute; left: 17px; top: 18px; bottom: 18px; width: 2px; border-radius: 2px; }
-  .steps::before { background: var(--line); }
-  .steps::after { background: linear-gradient(var(--rose), var(--mango)); transform-origin: top; transform: scaleY(var(--p, 0)); }
-  .step { position: relative; z-index: 1; display: flex; background: transparent; border: 0; backdrop-filter: none; padding: 0.6rem 0; opacity: 0.34; transition: opacity 0.6s var(--ease), transform 0.6s var(--ease); animation: none !important; }
-  .step.done { opacity: 0.62; }
-  .step.active { opacity: 1; }
-  .step-n { display: grid; place-items: center; width: 36px; height: 36px; min-width: 36px; border-radius: 50%; background: var(--paper); border: 1.5px solid var(--line); font-size: 0.95rem; font-style: normal; font-family: var(--sans); font-weight: 800; transition: background-color 0.5s, color 0.5s, border-color 0.5s, transform 0.6s var(--ease); position: relative; z-index: 1; }
-  .step.active .step-n { transform: scale(1.18); }
-  .step.done .step-n { border-color: var(--rose); color: var(--rose-d); }
-  .step.active .step-n { background: var(--rose-d); color: #fff; border-color: var(--rose-d); }
-  .step h3 { font-size: 1.5rem; }
-  .step p { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.7s var(--ease), opacity 0.6s; }
-  .step.active p { max-height: 3em; opacity: 1; }
   .chip { left: var(--x); top: var(--y); width: 104px; }
 }
 
@@ -286,7 +258,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* ==========================================================================
    Flavour selector
    ========================================================================== */
-.selector { --sel-bg: #ffe3eb; position: relative; overflow: clip; background: var(--sel-bg); color: var(--sel-ink, var(--plum)); padding-block: clamp(72px, 10vw, 140px); transition: color 0.9s var(--ease); }
+.selector { --sel-bg: #ffe3eb; position: relative; z-index: 2; overflow: clip; background: var(--sel-bg); color: var(--sel-ink, var(--plum)); padding-block: clamp(64px, 7vw, 96px) clamp(72px, 10vw, 140px); transition: color 0.9s var(--ease); }
 .sel-wash { position: absolute; inset: 0; clip-path: circle(0px at 72% 50%); pointer-events: none; z-index: 0; }
 .sel-grid { position: relative; z-index: 1; display: grid; gap: 1rem; align-items: center; }
 .selector .eyebrow { color: currentColor; opacity: 0.7; }
@@ -575,10 +547,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .vh-cta { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 1.8rem; }
 .btn-glass { border-color: rgba(255, 244, 227, 0.75); color: var(--cream); background: rgba(255, 244, 227, 0.1); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .btn-glass:hover { background: rgba(255, 244, 227, 0.2); border-color: #fff; }
-/* dark berry/plum → cream. Starts below the hero, slides up over it while the hero is pinned. */
-.vh-wash { position: absolute; left: 0; right: 0; top: 100%; height: 230%; z-index: 4; pointer-events: none; will-change: transform;
-  background: linear-gradient(0deg, var(--paper) 0%, var(--paper) 42%, #f6e3e6 50%, #e3b6c6 58%, #a8618a 68%, #5a2250 78%, rgba(47, 15, 43, 0.55) 88%, rgba(47, 15, 43, 0) 100%); }
-.vhero.still .vh-wash { display: none; }
 
 /* phones & portrait: product on top, copy underneath; lighter background (fewer blurred layers) */
 @media (max-aspect-ratio: 1/1) {
@@ -615,41 +583,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .nav.on-dark .btn-dark { background: var(--rose-d); color: #fff; }
 
 
-/* ==========================================================================
-   Photographic story ("Made Layer by Layer")
-   ========================================================================== */
-.pstory { position: relative; height: 100svh; min-height: 560px; overflow: clip; background: var(--paper); }
-.pstory::before { content: ''; position: absolute; inset: 0; background: radial-gradient(60% 55% at 72% 50%, var(--rose-l), rgba(255, 219, 231, 0) 70%); opacity: 0.6; }
-.ps-inner { position: relative; height: 100%; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; gap: 0.7rem; padding-top: 78px; padding-bottom: 18px; }
-.ps-left { display: contents; }
-.ps-left .eyebrow { display: none; }
-.ps-left .h2 { order: 1; text-align: center; font-size: clamp(1.9rem, 8.5vw, 2.8rem); }
-.ps-view { order: 2; position: relative; min-height: 0; border-radius: 26px; overflow: hidden; background: #140b07; box-shadow: 0 30px 60px -34px rgba(47, 15, 43, 0.65); isolation: isolate; }
-.ps-left .steps { order: 3; margin-top: 0; }
-.ps-cam, .ps-fit { position: absolute; left: 0; top: 0; will-change: transform; }
-.ps-cam { width: 100%; height: 100%; transform-origin: 50% 50%; }
-.ps-fit { width: 1792px; height: 941px; transform-origin: 0 0; }
-.ps-world { position: absolute; inset: 0; }
-.ps-l { position: absolute; left: 0; top: 0; width: 1792px; height: 941px; display: block; user-select: none; -webkit-user-drag: none; pointer-events: none; }
-.ps-l.in { clip-path: path('M920 232 L1394 232 L1358 888 L954 888 Z'); --t: 0px; --b: 2000px; --e: 34px;
-  -webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--t) - var(--e)), #000 var(--t), #000 var(--b), transparent calc(var(--b) + var(--e)));
-          mask-image: linear-gradient(to bottom, transparent calc(var(--t) - var(--e)), #000 var(--t), #000 var(--b), transparent calc(var(--b) + var(--e))); }
-.ps-l.out { clip-path: path(evenodd, 'M0 0 H1792 V941 H0 Z M920 232 L1394 232 L1358 888 L954 888 Z'); }
-.ps-l.nostream { -webkit-mask-image: linear-gradient(to right, #000 1080px, transparent 1116px, transparent 1250px, #000 1290px), linear-gradient(#000, #000);
-  -webkit-mask-size: 100% 275px, 100% 666px; -webkit-mask-position: 0 0, 0 275px; -webkit-mask-repeat: no-repeat;
-          mask-image: linear-gradient(to right, #000 1080px, transparent 1116px, transparent 1250px, #000 1290px), linear-gradient(#000, #000);
-          mask-size: 100% 275px, 100% 666px; mask-position: 0 0, 0 275px; mask-repeat: no-repeat; }
-.ps-l.scoop { clip-path: path('M1005 262 C998 130 1080 36 1157 34 C1235 36 1317 130 1310 262 Z');
-  -webkit-mask-image: radial-gradient(ellipse 170px 150px at 1157px 150px, #000 78%, transparent 100%); mask-image: radial-gradient(ellipse 170px 150px at 1157px 150px, #000 78%, transparent 100%); transform-origin: 1157px 262px; }
-.ps-shade { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 95% at 50% 55%, transparent 58%, rgba(10, 5, 3, 0.45) 100%); }
-@media (min-width: 900px) {
-  .ps-inner { grid-template-columns: 0.8fr 1.2fr; grid-template-rows: minmax(0, 1fr); gap: 3rem; align-items: center; padding-top: 88px; padding-bottom: 30px; }
-  .ps-left { display: block; }
-  .ps-left .eyebrow { display: inline-flex; }
-  .ps-left .h2 { text-align: left; font-size: clamp(2.6rem, 5vw, 4.4rem); margin-bottom: 1.8rem; }
-  .ps-view { height: min(80svh, 720px); border-radius: 32px; }
-}
-
 /* Signature: a real photograph, framed */
 .sg-photo { position: relative; height: var(--mh); aspect-ratio: 16 / 11; max-width: min(92vw, 860px); border-radius: 32px; overflow: hidden; box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.6); will-change: transform; }
 .sg-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 62% 50%; transform-origin: 62% 50%; will-change: transform; }
@@ -659,17 +592,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* nav: a soft blur as soon as the page moves, solid cream once the dark hero is gone */
 .nav.scrolled { backdrop-filter: blur(12px) saturate(1.2); -webkit-backdrop-filter: blur(12px) saturate(1.2); }
 .nav.scrolled.on-dark { background: rgba(12, 6, 4, 0.42); }
-
-/* story HUD: the current step and overall progress, tied to scroll */
-.ps-hud { position: absolute; inset: auto 0 0 0; padding: 18px 20px; display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; pointer-events: none; background: linear-gradient(0deg, rgba(10, 5, 3, 0.7), transparent); z-index: 2; }
-.ps-labels { position: relative; height: 2.1rem; min-width: 60%; }
-.hl { position: absolute; left: 0; bottom: 0; display: inline-flex; align-items: baseline; gap: 0.7rem; font-family: var(--serif); font-size: clamp(1.15rem, 2.2vw, 1.6rem); color: var(--cream); white-space: nowrap; opacity: 0; transform: translateY(18px); transition: opacity 0.5s var(--ease), transform 0.7s var(--ease); }
-.hl i { font-style: italic; font-size: 0.8em; color: #ff9fbd; }
-.hl.on { opacity: 1; transform: none; }
-.ps-pct { font-family: var(--serif); font-size: clamp(1.6rem, 3vw, 2.4rem); line-height: 1; color: var(--cream); font-variant-numeric: tabular-nums; }
-.ps-pct b { font-weight: 500; }
-.ps-pct { opacity: 0.9; }
-.pstory .ps-view { will-change: transform; }
 
 /* photographic glass tile (flavour cards + selector) */
 .pg { position: relative; width: 100%; height: 100%; aspect-ratio: 510 / 880; overflow: hidden; border-radius: 20px; background: #140b07; isolation: isolate; box-shadow: 0 22px 40px -22px rgba(47, 15, 43, 0.6); }
@@ -681,3 +603,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .card-media::before { display: none; }
 .sel-glass-in { aspect-ratio: 510 / 880; }
 .sel-glass-in .pg { border-radius: 26px; box-shadow: 0 40px 70px -34px rgba(0, 0, 0, 0.55); }
+
+/* the flavour section rises over the pinned hero: a soft plum shade at its top edge blends the dark hero into its tone */
+.selector::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: clamp(70px, 12vh, 130px); z-index: 0; pointer-events: none; background: linear-gradient(to bottom, rgba(90, 34, 80, 0.5), rgba(90, 34, 80, 0)); }

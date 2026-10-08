@@ -5,6 +5,7 @@ import { SITE } from '../data/site'
 import { finePointer, prefersReduced } from '../hooks/motion'
 
 gsap.registerPlugin(ScrollTrigger)
+if (import.meta.env.DEV) window.__gsap = { gsap, ScrollTrigger } // dev-only: inspect the scroll system from the console
 
 /*
   Front page. The background is generated live (no image, no video):
@@ -192,13 +193,12 @@ export default function Hero() {
     const sc = gsap.context(() => {
       const tl = gsap.timeline({
         defaults: { ease: 'none' },
-        scrollTrigger: { trigger: el, start: 'top top', end: () => `+=${Math.round(window.innerHeight * (mobile ? 0.55 : 0.75))}`, pin: true, scrub: 0.8, anticipatePin: 1, invalidateOnRefresh: true },
+        scrollTrigger: { trigger: el, start: 'top top', end: () => `+=${Math.round(window.innerHeight * (mobile ? 0.55 : 0.75))}`, pin: true, pinSpacing: false, scrub: 0.8, anticipatePin: 1, invalidateOnRefresh: true }, // pinSpacing off: the next section rises over the pinned hero (no empty screen)
       })
       tl.to('.vh-copy', { y: -90, opacity: 0, duration: 0.5, ease: 'power2.in' }, 0)
         .to('.vh-scale', { scale: mobile ? 1.25 : 1.4, y: mobile ? 0 : 30, duration: 1, transformOrigin: '50% 60%' }, 0)
         .to('.vh-bgfar', { yPercent: -10, scale: 1.12, duration: 1 }, 0)
         .to('.vh-bgmid', { yPercent: -16, duration: 1 }, 0)
-        .to('.vh-wash', { yPercent: -100, duration: 0.85, ease: 'power1.in' }, 0.2)
     }, el)
     cleanups.push(() => sc.revert())
 
@@ -310,7 +310,6 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className="vh-wash" aria-hidden="true" />
     </section>
   )
 }

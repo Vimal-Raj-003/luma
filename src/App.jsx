@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Nav from './components/Nav'
 import Hero from './components/Hero'
-import PhotoStory from './components/PhotoStory'
 import FlavourSelector from './components/FlavourSelector'
 import Marquee from './components/Marquee'
 import Flavours from './components/Flavours'
@@ -40,7 +39,6 @@ export default function App() {
       <Nav ready={ready} />
       <main>
         <Hero />
-        <PhotoStory />
         <FlavourSelector />
         <Marquee />
         <Flavours />

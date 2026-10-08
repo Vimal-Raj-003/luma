@@ -12,7 +12,7 @@ export default function Footer() {
           </div>
           <nav className="f-links" aria-label="Footer">
             <a href="#flavours">Menu</a>
-            <a href="#story">About</a>
+            <a href="#signature">About</a>
             <a href="#visit">Contact</a>
             <a href={SITE.contact.instagramHref}>Instagram</a>
             <a href={SITE.contact.orderHref}>Order Online</a>

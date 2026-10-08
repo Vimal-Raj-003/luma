@@ -16,9 +16,6 @@ export const prefersReduced = () => osReduced() && !motionForced()
 export const finePointer = () =>
   typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches
 
-// shared handle so nav links can jump to a point inside the pinned scene
-export const scene = { st: null, storyAt: 0 }
-
 export const lockScroll = (on) => {
   document.documentElement.style.overflow = on ? 'hidden' : ''
 }

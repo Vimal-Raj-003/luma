@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { SITE } from '../data/site'
-import { prefersReduced, scene } from '../hooks/motion'
+import { prefersReduced } from '../hooks/motion'
 
 export const Logo = ({ light = false }) => (
   <a href="#top" className={`logo${light ? ' light' : ''}`} aria-label="LUMA home">
@@ -24,7 +24,7 @@ export default function Nav({ ready }) {
 
   useEffect(() => {
     let raf = 0
-    const SECTIONS = ['#craft', '#mood', '#build', '#visit']
+    const SECTIONS = ['#mood', '#build', '#visit']
     const on = () => {
       const y = window.scrollY
       setScrolled(y > 24)
@@ -66,21 +66,11 @@ export default function Nav({ ready }) {
     return () => ctx.revert()
   }, [ready])
 
-  // "Our Craft" lives inside the pinned scene: jump to the point where the story starts
-  const go = (e) => {
-    if (scene.st) {
-      e.preventDefault()
-      const { start, end } = scene.st
-      window.scrollTo({ top: start + (end - start) * scene.storyAt, behavior: 'smooth' })
-    }
-  }
-
   return (
     <header className={`nav${solid ? ' solid' : ' on-dark'}${scrolled ? ' scrolled' : ''}`}>
       <div className="nav-in">
         <Logo />
         <nav className="nav-links" aria-label="Primary" ref={links}>
-          <a href="#story" onClick={go}>Our Craft</a>
           <a href="#mood">Flavours</a>
           <a href="#build">Build Yours</a>
           <a href="#visit">Visit</a>

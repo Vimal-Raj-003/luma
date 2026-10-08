@@ -94,12 +94,12 @@ export default function FlavourSelector() {
     const el = root.current
     const cleanups = []
     const ctx = gsap.context(() => {
-      const st = { trigger: el, start: 'top 90%', end: 'top 15%', scrub: 0.9 }
+      const st = { trigger: el, start: 'top 100%', end: 'top 35%', scrub: 0.9 }
       gsap.fromTo('.sel-enter', { scale: 1.45, y: -40, rotate: 0 }, { scale: 1, y: 0, rotate: 0, ease: 'none', scrollTrigger: st })
       gsap.fromTo('.sel-copy', { x: -90, opacity: 0.1 }, { x: 0, opacity: 1, ease: 'none', scrollTrigger: st })
       gsap.fromTo('.sel-disc', { scale: 0.3 }, { scale: 1, ease: 'none', scrollTrigger: st })
       gsap.utils.toArray('.sel-fl').forEach((n, i) => {
-        gsap.fromTo(n, { y: 120 + i * 40, opacity: 0 }, { y: 0, opacity: 1, ease: 'none', scrollTrigger: { ...st, end: 'top 30%' } })
+        gsap.fromTo(n, { y: 120 + i * 40, opacity: 0 }, { y: 0, opacity: 1, ease: 'none', scrollTrigger: { ...st, end: 'top 45%' } })
       })
 
       if (finePointer()) {
