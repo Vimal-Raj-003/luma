@@ -33,7 +33,7 @@ export const PALETTES = {
     syrup: ['#EE6593', '#B72B5E'],
     milk: ['#FFEEF3', '#FBCADA'],
     scoops: [VANILLA, ['#FFD6E3', '#F0A0BC'], VANILLA],
-    fruit: '#FFC247',
+    fruit: '#FF5A78',
     jelly: ['#FF86AB', '#A5D98F', '#FFD35F'],
   },
   mango: {
@@ -146,6 +146,15 @@ export const SELECTOR = {
     bg: '#FFEDBE',
     ink: '#4A2A10',
     accent: '#FFAE1A',
+  },
+  strawberry: {
+    label: 'Strawberry',
+    title: 'Fresh Strawberry',
+    line: 'Bright, juicy and cool. Berries all the way down.',
+    notes: ['Fresh strawberry', 'Berry scoop', 'Ruby jelly'],
+    bg: '#FFD9DF',
+    ink: '#4A1942',
+    accent: '#E8325A',
   },
   chocolate: {
     label: 'Chocolate',

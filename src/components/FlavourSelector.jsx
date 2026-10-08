@@ -8,7 +8,7 @@ import { finePointer, prefersReduced } from '../hooks/motion'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const ORDER = ['rose', 'pistachio', 'mango', 'chocolate']
+const ORDER = ['rose', 'strawberry', 'mango', 'pistachio', 'chocolate']
 const PARTICLES = Array.from({ length: 16 }, (_, i) => i)
 
 /*

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { prefersReduced } from '../hooks/motion'
 import FaloodaGlass from './FaloodaGlass'
 import { SectionHead } from './Flavours'
@@ -11,7 +12,7 @@ const Check = () => (
 
 function Step({ n, title, hint, children }) {
   return (
-    <fieldset className="b-step" data-reveal>
+    <fieldset className="b-step">
       <legend>
         <span className="b-n">{n}</span>
         <span className="b-t">{title}</span>
@@ -39,9 +40,38 @@ export default function Builder() {
   }
   const toggle = (list, set, kind) => (id) => {
     const on = !list.includes(id)
-    set(on ? [...list, id] : list.filter((x) => x !== id))
-    note(kind, id, on)
+    if (on || prefersReduced()) {
+      set(on ? [...list, id] : list.filter((x) => x !== id))
+      note(kind, id, on)
+      return
+    }
+    // removing: the pieces lift off and scatter first, then the layer is taken out of the state
+    const items = box.current.querySelectorAll(`.fl-k-${id} .tp`)
+    gsap.to(items, {
+      y: -80, opacity: 0, rotation: () => gsap.utils.random(-50, 50), transformOrigin: '50% 50%',
+      duration: 0.45, stagger: { each: 0.012, from: 'random' }, ease: 'power2.in', overwrite: true,
+      onComplete: () => {
+        set(list.filter((x) => x !== id))
+        note(kind, id, false)
+      },
+    })
   }
+
+  const root = useRef(null)
+  useLayoutEffect(() => {
+    if (prefersReduced()) return
+    const ctx = gsap.context(() => {
+      gsap.fromTo('.b-preview-in .glass-box', { scale: 1.4, y: -70, rotate: -5 }, {
+        scale: 1, y: 0, rotate: 0, ease: 'none',
+        scrollTrigger: { trigger: root.current, start: 'top 88%', end: 'top 30%', scrub: 0.9 },
+      })
+      gsap.fromTo('.b-step', { x: 60, opacity: 0.2 }, {
+        x: 0, opacity: 1, stagger: 0.12, ease: 'none',
+        scrollTrigger: { trigger: root.current, start: 'top 80%', end: 'top 25%', scrub: 0.9 },
+      })
+    }, root)
+    return () => ctx.revert()
+  }, [])
 
   // every choice visibly acts on the glass
   useEffect(() => {
@@ -86,7 +116,7 @@ export default function Builder() {
   const baseLabel = BUILDER.bases.find((b) => b.id === base).label
 
   return (
-    <section className="section builder" id="build">
+    <section className="section builder" id="build" ref={root}>
       <div className="wrap">
         <SectionHead eyebrow="Make it yours" title={<>Build Your <em>Falooda</em></>}>
           Four quick choices. Watch your glass come together.

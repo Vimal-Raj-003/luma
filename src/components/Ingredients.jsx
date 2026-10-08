@@ -67,6 +67,24 @@ export const CHIPS = {
   syrup: { label: 'Rose Syrup', render: () => <Drop color="#EE6593" /> },
   basil: { label: 'Basil Seeds', render: () => <Basil /> },
   sev: { label: 'Falooda Sev', render: () => <Noodles /> },
+  bsev: {
+    label: 'Basil & Sev',
+    render: () => (
+      <div className="chip-duo">
+        <Basil />
+        <Noodles />
+      </div>
+    ),
+  },
+  fruit: {
+    label: 'Jelly & Strawberry',
+    render: () => (
+      <div className="chip-duo">
+        <Jelly color="#E8325A" />
+        <Berry />
+      </div>
+    ),
+  },
   milk: { label: 'Chilled Milk', render: () => <Drop color="#FFF4EA" stroke="#F3CFDB" /> },
   ice: { label: 'Ice Cream', render: () => <ScoopIcon /> },
   nuts: {

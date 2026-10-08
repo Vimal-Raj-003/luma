@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Nav from './components/Nav'
-import VideoHero from './components/VideoHero'
 import Stage from './components/Stage'
 import FlavourSelector from './components/FlavourSelector'
 import Marquee from './components/Marquee'
@@ -40,7 +39,6 @@ export default function App() {
     <>
       <Nav ready={formed} />
       <main>
-        <VideoHero />
         <Stage ready={ready} onFormed={() => setFormed(true)} />
         <FlavourSelector />
         <Marquee />

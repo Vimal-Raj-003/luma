@@ -32,17 +32,43 @@ const Jel = ({ x, y, s, r, c }) => {
 }
 
 // fruit chunk: palette-coloured body + pre-rendered pulp shading sprite
-const Chunk = ({ x, y, s, r, fill }) => {
+const BERRY_COLOURS = new Set(['#FF5A78', '#FF6A82'])
+
+// fruit piece: a real strawberry-slice sprite for berry palettes, otherwise a shaded chunk
+const Chunk = ({ x, y, s, r, fill, berry }) => {
   const k = (s * 100) / 84
+  const b = s * 1.5
   return (
     <g className="tp" data-ry={y}>
       <g transform={`translate(${x} ${y}) rotate(${r})`}>
-        <rect x={-s / 2} y={-s / 2} width={s} height={s} rx={s * 0.24} style={{ fill }} className="tf" />
-        <image href={A('chunk-shade')} x={-k / 2} y={-k / 2} width={k} height={k} />
+        {berry ? (
+          <image href={A('berry')} x={-b / 2} y={-b / 2} width={b} height={b} />
+        ) : (
+          <>
+            <rect x={-s / 2} y={-s / 2} width={s} height={s} rx={s * 0.24} style={{ fill }} className="tf" />
+            <image href={A('chunk-shade')} x={-k / 2} y={-k / 2} width={k} height={k} />
+          </>
+        )}
       </g>
     </g>
   )
 }
+
+// slow ribbons of syrup colour folding through the milk
+const Swirl = ({ ys, color }) => (
+  <g className="fl-swirl">
+    {ys.map((y, i) => (
+      <path
+        key={i}
+        d={`M20 ${y} C 90 ${y - 20 - i * 3} 140 ${y + 24} 210 ${y + 2} S 330 ${y - 16} 400 ${y + 8}`}
+        fill="none"
+        strokeLinecap="round"
+        strokeWidth={9 - i * 1.6}
+        style={{ stroke: color, animationDuration: `${6 + i * 1.7}s`, animationDelay: `${-i * 1.3}s` }}
+      />
+    ))}
+  </g>
+)
 
 export default function FaloodaGlass({ palette = 'rose', custom, show, animated = false, lite = false, className = '' }) {
   const uid = useId().replace(/:/g, '')
@@ -54,6 +80,7 @@ export default function FaloodaGlass({ palette = 'rose', custom, show, animated 
   const nBasil = lite ? 26 : BASIL.length
   const nPista = lite ? 12 : PISTA.length
   const nNoodle = lite ? 10 : NOODLES.length
+  const berry = BERRY_COLOURS.has(p.fruit)
 
   return (
     <svg
@@ -155,6 +182,7 @@ export default function FaloodaGlass({ palette = 'rose', custom, show, animated 
               <path d={wave(TOP.milk, 5)} fill={`url(#${id('milk')})`} />
               <path d={waveLine(TOP.milk + 3, 5)} fill="none" stroke="#fff" strokeOpacity=".28" strokeWidth="6" />
               <path d={waveLine(TOP.milk, 5)} fill="none" stroke="#fff" strokeOpacity=".7" strokeWidth="1.2" />
+              <Swirl ys={[214, 238, 258]} color={p.syrup[0]} />
             </g>
             <g className="fl-bubbles">
               {BUBBLES.map((b, i) => (
@@ -162,9 +190,9 @@ export default function FaloodaGlass({ palette = 'rose', custom, show, animated 
               ))}
             </g>
             <g className={t('fruit')}>
-              <Chunk x={119} y={233} s={21} r={-14} fill={p.fruit} />
-              <Chunk x={278} y={224} s={19} r={18} fill={p.fruit} />
-              <Chunk x={195} y={247} s={17} r={-6} fill={p.fruit} />
+              <Chunk x={119} y={233} s={21} r={-14} fill={p.fruit} berry={berry} />
+              <Chunk x={278} y={224} s={19} r={18} fill={p.fruit} berry={berry} />
+              <Chunk x={195} y={247} s={17} r={-6} fill={p.fruit} berry={berry} />
             </g>
             <g className={t('jelly')}>
               <Jel x={236} y={246} s={17} r={-10} c={p.jelly[0]} />
@@ -182,6 +210,7 @@ export default function FaloodaGlass({ palette = 'rose', custom, show, animated 
               <path d={wave(TOP.sev, 4.5)} fill={`url(#${id('milk')})`} />
               <path d={wave(TOP.sev, 4.5)} fill="#fff" opacity=".14" />
               <path d={waveLine(TOP.sev, 4.5)} fill="none" stroke="#fff" strokeOpacity=".5" strokeWidth="1" />
+              <Swirl ys={[284, 306]} color={p.syrup[0]} />
             </g>
             <g className={t('sev')}>
               {NOODLES.slice(0, nNoodle).map((n, i) => (

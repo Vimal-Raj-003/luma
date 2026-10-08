@@ -15,7 +15,7 @@ import puppeteer from 'puppeteer-core'
 
 const require = createRequire(import.meta.url)
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
-const OUT = path.join(ROOT, 'public', 'assets', 'hero')
+const OUT = path.join(ROOT, 'tools', 'hero-video-archive')
 const FFMPEG = process.env.FFMPEG_PATH || require('ffmpeg-static')
 const CHROME = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe'
 const URL_BASE = process.env.RENDER_URL || 'http://localhost:5180'

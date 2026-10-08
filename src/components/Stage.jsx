@@ -40,18 +40,24 @@ const TIER = {
   near: { d: 90, fy: 30, fx: 30, fr: 24, dur: 4.6, blur: 3.4, op: 1, push: 1.7, from: 1.8 },
 }
 
+/*
+  Scroll story (percent of the pinned build, before the hand-off):
+    0–15 empty glass · 15–30 syrup · 30–45 basil + sev · 45–60 milk · 60–75 jelly + strawberry · 75–90 ice cream · 90–100 toppings
+*/
 const STEPS = [
-  { key: 'syrup', layer: '.fl-syrup', title: 'Rose Syrup', text: 'A deep, fragrant base poured first.', pos: ['55%', '70%', '6%', '36%'], pour: PALETTES.rose.syrup[0], top: 392 },
-  { key: 'basil', layer: '.fl-basil', title: 'Basil Seeds', text: 'Soft, silky pearls that cool every sip.', pos: ['90%', '72%', '78%', '38%'] },
-  { key: 'sev', layer: '.fl-sev', title: 'Falooda Sev', text: 'Delicate noodles, tangled and chilled.', pos: ['51%', '38%', '4%', '21%'] },
-  { key: 'milk', layer: '.fl-milk', title: 'Chilled Milk', text: 'Sweet, creamy and poured slow.', pos: ['93%', '40%', '80%', '20%'], pour: PALETTES.rose.milk[0], top: 196 },
-  { key: 'ice', layer: '.fl-ice', title: 'Ice Cream', text: 'Three hand-scooped crowns on top.', pos: ['58%', '14%', '8%', '12%'] },
-  { key: 'nuts', layer: '.fl-top', title: 'Nuts & Toppings', text: 'Pistachio, almond, petals — the finish.', pos: ['88%', '12%', '76%', '12%'] },
+  { key: 'syrup', title: 'Rose Syrup', text: 'A deep, fragrant base poured first.', pos: ['55%', '70%', '6%', '36%'], pour: PALETTES.rose.syrup[0], top: 392 },
+  { key: 'bsev', title: 'Basil Seeds & Sev', text: 'Silky pearls and chilled noodles settle in.', pos: ['90%', '70%', '78%', '38%'] },
+  { key: 'milk', title: 'Chilled Milk', text: 'Poured slow, swirling into the syrup.', pos: ['93%', '40%', '80%', '20%'], pour: PALETTES.rose.milk[0], top: 196 },
+  { key: 'fruit', title: 'Jelly & Strawberries', text: 'Ruby jelly and fresh berries drop through.', pos: ['51%', '36%', '4%', '21%'] },
+  { key: 'ice', title: 'Ice Cream', text: 'Three hand-scooped crowns on top.', pos: ['58%', '14%', '8%', '12%'] },
+  { key: 'nuts', title: 'Final Toppings', text: 'Pistachio, almond, petals and a syrup drizzle.', pos: ['88%', '12%', '76%', '12%'] },
 ]
 const TOP_SYRUP = 392
-const A = 1.8 // deconstruct phase
-const B = STEPS.length
-const C = 1.2 // hand-off phase
+const A = 1.5 // empty glass: 0–15 %
+const SW = [1.5, 1.5, 1.5, 1.5, 1.5, 1.0] // stage widths: 15 % each, the last 10 %
+const STARTS = SW.map((_, i) => A + SW.slice(0, i).reduce((x, y) => x + y, 0))
+const B = SW.reduce((x, y) => x + y, 0) // 8.5
+const C = 1.2 // hand-off into the next section (after 100 %)
 const TOTAL = A + B + C
 
 function Floater({ k, c, t, x, y, mx, my, s, ms, rot }) {
@@ -88,6 +94,7 @@ export default function Stage({ ready, onFormed }) {
       el.classList.add('rm')
       return
     }
+    lockScroll(true)
     const ctx = gsap.context(() => {
       gsap.set(sg1.current, { yPercent: 120, rotation: 10, rotationY: -26, rotationX: 16, scale: 0.86, opacity: 0, transformPerspective: 1200 })
       gsap.set('.sg3 .fl-k-sev > .tp path', { strokeDasharray: 1, strokeDashoffset: 1 })
@@ -252,6 +259,8 @@ export default function Stage({ ready, onFormed }) {
       tl.set(Q('.fl-sev .fl-body, .fl-milk .fl-body'), { opacity: 1 }, 3.15)
         .to(Q('.fl-sev .fl-body, .fl-milk .fl-body'), { y: 0, duration: 0.9, ease: 'power1.inOut' }, 3.15)
         .to(Q('.fl-vol'), { opacity: 1, duration: 0.6, ease: 'power1.out' }, 3.7)
+      // the syrup ribbons start vivid where the milk lands and mix out to a soft pink as it fills
+      tl.fromTo(Q('.fl-swirl path'), { opacity: 0.95 }, { opacity: 0.2, duration: 2.2, ease: 'power1.out' }, 3.2)
       drop(Q('.fl-milk .fl-k-jelly .tp, .fl-milk .fl-k-fruit .tp'), 3.3, 196, { each: 0.1, sink: 0.45, scatter: 16 })
 
       /* 3.6 — scoops fall one after another, squash on the milk, the surface sloshes, the camera knocks */
@@ -327,15 +336,6 @@ export default function Stage({ ready, onFormed }) {
           ctx.add(bindPointer)
         }, null, 6.6)
 
-      // the stage lives below the video hero: settle straight into the finished glass (also builds the scroll scene)
-      tl.pause()
-      let cancelled = false
-      cleanups.push(() => { cancelled = true })
-      // deferred: the timeline's end-callbacks use `ctx`, which only exists once this callback has returned
-      queueMicrotask(() => {
-        if (!cancelled) ctx.add(() => tl.progress(1, false))
-      })
-
       // any attempt to scroll / click / press a key fast-forwards the intro
       const skip = () => tl.timeScale(7)
       skipBtn.current.addEventListener('click', skip)
@@ -360,88 +360,96 @@ export default function Stage({ ready, onFormed }) {
             start: 'top top',
             end: () => `+=${Math.round(window.innerHeight * TOTAL * (window.innerWidth < 900 ? 0.62 : 0.74))}`,
             pin: true,
-            scrub: 0.9,
+            scrub: 0.9, // tied to scroll position; scrolling back reverses the whole build
             anticipatePin: 1,
             invalidateOnRefresh: true,
             onUpdate: (self) => {
               const t = self.progress * TOTAL
-              const i = t < A - 0.3 ? -1 : Math.min(B - 1, Math.floor(t - A + 0.25))
-              steps.forEach((s, n) => {
-                s.classList.toggle('active', n === i)
-                s.classList.toggle('done', n < i)
+              let i = -1
+              STARTS.forEach((st, n) => { if (t >= st - 0.05) i = n })
+              steps.forEach((s2, n) => {
+                s2.classList.toggle('active', n === i)
+                s2.classList.toggle('done', n < i)
               })
               el.style.setProperty('--p', Math.max(0, Math.min(1, (t - A) / B)).toFixed(3))
               el.dataset.step = i
+              el.dataset.pct = Math.round(Math.min(1, t / (A + B)) * 100)
             },
           },
         })
         scene.st = tl2.scrollTrigger
         scene.storyAt = (A + 0.1) / TOTAL
 
-        /* A — take the glass apart */
+        /* 0–15 % — the finished hero comes apart into an empty glass */
+        const BODY = { syrup: 100, basil: 80, sev: 134, milk: 134 }
         tl2
           .to('.h-word', { yPercent: -140, rotate: -5, duration: 0.7, stagger: 0.07, ease: 'power2.in', immediateRender: false }, 0)
           .to('.hero-copy .h-fade', { y: -64, opacity: 0, duration: 0.6, stagger: 0.05, ease: 'power2.in', immediateRender: false }, 0.05)
           .set('.hero-copy', { pointerEvents: 'none' }, 0.5)
-          .to(
-            '.fl-e',
-            {
-              x: (i, t) => { const v = vec(t); return (v.dx / v.len) * (320 + v.len * 0.6) * TIER[t.dataset.tier].push },
-              y: (i, t) => { const v = vec(t); return (v.dy / v.len) * (300 + v.len * 0.6) * TIER[t.dataset.tier].push },
-              scale: (i, t) => (t.dataset.tier === 'near' ? 1.9 : 0.5),
-              opacity: 0,
-              duration: 1.2,
-              ease: 'power2.in',
-              immediateRender: false,
-            },
-            0.05,
-          )
-          .to(`${g} .fl-vol, ${g} .fl-cond`, { opacity: 0, duration: 0.4, ease: 'power1.in', immediateRender: false }, 0.6)
-          .to(`${g} .fl-top`, { y: -90, opacity: 0, duration: 0.5, ease: 'power2.in', immediateRender: false }, 0.1)
-          .to(`${g} .fl-ice`, { y: -170, scale: 0.9, svgOrigin: '200 190', opacity: 0, duration: 0.7, ease: 'power2.in', immediateRender: false }, 0.3)
-          ;['.fl-milk', '.fl-sev', '.fl-basil', '.fl-syrup'].forEach((s, i) => {
-            tl2.to(`${g} ${s}`, { y: -40, opacity: 0, duration: 0.4, ease: 'power2.in', immediateRender: false }, 0.75 + i * 0.2)
-          })
+          .to('.fl-e', {
+            x: (i, t) => { const v = vec(t); return (v.dx / v.len) * (320 + v.len * 0.6) * TIER[t.dataset.tier].push },
+            y: (i, t) => { const v = vec(t); return (v.dy / v.len) * (300 + v.len * 0.6) * TIER[t.dataset.tier].push },
+            scale: (i, t) => (t.dataset.tier === 'near' ? 1.9 : 0.5),
+            opacity: 0, duration: 1.1, ease: 'power2.in', immediateRender: false,
+          }, 0.05)
+          .to(`${g} .fl-top .tp`, { y: -90, opacity: 0, duration: 0.4, stagger: { each: 0.004, from: 'random' }, ease: 'power2.in', immediateRender: false }, 0.05)
+          .to(`${g} .fl-ice`, { y: -170, scale: 0.9, svgOrigin: '200 190', opacity: 0, duration: 0.5, ease: 'power2.in', immediateRender: false }, 0.15)
+          .to(`${g} .fl-vol, ${g} .fl-cond`, { opacity: 0, duration: 0.3, ease: 'power1.in', immediateRender: false }, 0.3)
+          .to(`${g} .fl-k-jelly .tp, ${g} .fl-k-fruit .tp`, { y: -40, opacity: 0, duration: 0.35, stagger: { each: 0.02, from: 'random' }, ease: 'power2.in', immediateRender: false }, 0.35)
+          .to(`${g} .fl-milk .fl-body`, { y: BODY.milk, opacity: 0, duration: 0.4, ease: 'power2.in', immediateRender: false }, 0.5)
+          .to(`${g} .fl-sev .fl-body, ${g} .fl-k-sev > .tp`, { y: BODY.sev, opacity: 0, duration: 0.4, ease: 'power2.in', immediateRender: false }, 0.6)
+          .to(`${g} .fl-basil .fl-body, ${g} .fl-k-basil .tp`, { y: BODY.basil, opacity: 0, duration: 0.4, ease: 'power2.in', immediateRender: false }, 0.75)
+          .to(`${g} .fl-syrup .fl-body`, { y: BODY.syrup, opacity: 0, duration: 0.45, ease: 'power2.in', immediateRender: false }, 0.95)
         tl2
           .to(g, { scale: S(1.12), rotate: -3, x: mobile ? 0 : -70, y: mobile ? 0 : 16, duration: A, ease: 'power1.inOut', immediateRender: false }, 0)
-          .fromTo('.stage-aura', { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.9, ease: 'power2.out', immediateRender: false }, 0.9)
-          .fromTo(story, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', immediateRender: false }, 1.2)
+          .fromTo('.stage-aura', { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.8, ease: 'power2.out', immediateRender: false }, 0.7)
+          .fromTo(story, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', immediateRender: false }, 1.0)
 
-        /* B — rebuild it, one layer at a time */
-        STEPS.forEach((s, i) => {
-          const base = A + i
-          const chip = el.querySelector(`.chip[data-k="${s.key}"]`)
-          const target = el.querySelector(`${g} ${s.layer}`)
+        /* 15–100 % — rebuilt layer by layer; every piece is its own tween, so it runs backwards when you scroll up */
+        const pour = (s0, color, fromY, toY) => {
+          const pr = el.querySelector(`${g} .fl-pour`)
+          tl2.fromTo(pr, { attr: { y: -520, height: 0, fill: color, x: 194, width: 12 }, opacity: 0.95 }, { attr: { height: fromY + 520 }, duration: 0.25, ease: 'power1.in', immediateRender: false }, s0 + 0.3)
+            .to(pr, { attr: { height: toY + 520 }, duration: 0.4, ease: 'power1.inOut' }, s0 + 0.55)
+            .to(pr, { attr: { y: toY, height: 0 }, duration: 0.25, ease: 'power1.out' }, s0 + 0.95)
+            .set(pr, { opacity: 0 }, s0 + 1.2)
+        }
+        const rise = (sel, y0, at, d = 0.8) => tl2.fromTo(`${g} ${sel}`, { y: y0, opacity: 0 }, { y: 0, opacity: 1, duration: d, ease: 'power1.inOut', immediateRender: false }, at)
+        const rain = (sel, at, d = 0.7, each = 0.03) =>
+          tl2.fromTo(`${g} ${sel}`,
+            { y: (k) => -(80 + ((k * 37) % 100)), opacity: 0, rotation: (k) => ((k * 53) % 80) - 40, transformOrigin: '50% 50%' },
+            { y: 0, opacity: 1, rotation: 0, duration: d, stagger: { each, from: 'random' }, ease: 'power2.out', immediateRender: false }, at)
+
+        STEPS.forEach((s2, i) => {
+          const s0 = STARTS[i]
+          const chip = el.querySelector(`.chip[data-k="${s2.key}"]`)
           const toGlass = (axis) => () => {
             const gr = el.querySelector(g).getBoundingClientRect()
             const c = chip.getBoundingClientRect()
             return axis === 'x' ? gr.left + gr.width / 2 - (c.left + c.width / 2) : gr.top + gr.height * 0.2 - (c.top + c.height / 2)
           }
-          tl2.fromTo(chip, { opacity: 0, scale: 0.55, y: 50, x: 0 }, { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: 'power2.out', immediateRender: false }, base)
-          tl2.to(chip, { x: toGlass('x'), y: toGlass('y'), scale: 0.25, opacity: 0, duration: 0.42, ease: 'power2.in' }, base + 0.4)
+          tl2.fromTo(chip, { opacity: 0, scale: 0.55, y: 50, x: 0 }, { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: 'power2.out', immediateRender: false }, s0)
+          tl2.to(chip, { x: toGlass('x'), y: toGlass('y'), scale: 0.25, opacity: 0, duration: 0.42, ease: 'power2.in' }, s0 + 0.4)
+          if (s2.pour) pour(s0, s2.pour, i === 0 ? 452 : 330, s2.top)
 
-          if (s.pour) {
-            const pr = el.querySelector(`${g} .fl-pour`)
-            tl2.fromTo(pr, { attr: { y: 30, height: 0, fill: s.pour }, opacity: 0.95 }, { attr: { y: 30, height: s.top - 30 }, duration: 0.24, ease: 'power1.in', immediateRender: false }, base + 0.5)
-            tl2.to(pr, { attr: { y: s.top, height: 0 }, duration: 0.26, ease: 'power1.out' }, base + 0.74)
+          if (s2.key === 'syrup') rise('.fl-syrup .fl-body', BODY.syrup, s0 + 0.5, 0.9)
+          if (s2.key === 'bsev') {
+            rise('.fl-basil .fl-body', BODY.basil, s0 + 0.2, 0.5)
+            rain('.fl-k-basil .tp', s0 + 0.3, 0.55, 0.01)
+            rise('.fl-sev .fl-body', BODY.sev, s0 + 0.7, 0.55)
+            rain('.fl-k-sev > .tp', s0 + 0.75, 0.5, 0.02)
           }
-
-          const poured = s.key === 'ice' ? { y: -130, scale: 0.85, svgOrigin: '200 190' } : { y: s.key === 'nuts' ? -60 : -70 }
-          tl2.fromTo(target, { opacity: 0, ...poured }, { opacity: 1, y: 0, scale: 1, duration: 0.46, ease: 'power3.out', immediateRender: false }, base + 0.56)
-          if (s.key === 'milk') tl2.fromTo(`${g} .fl-vol, ${g} .fl-cond`, { opacity: 0 }, { opacity: 1, duration: 0.4, immediateRender: false }, base + 0.8)
-          if (s.key === 'ice') {
-            tl2.fromTo(`${g} .fl-scoop`, { y: -170 }, { y: 0, duration: 0.46, stagger: 0.09, ease: 'power3.out', immediateRender: false }, base + 0.56)
-            tl2.fromTo(`${g} .fl-sauce`, { opacity: 0 }, { opacity: 1, duration: 0.3, immediateRender: false }, base + 0.95)
+          if (s2.key === 'milk') {
+            rise('.fl-milk .fl-body', BODY.milk, s0 + 0.55, 0.9)
+            tl2.fromTo(`${g} .fl-vol, ${g} .fl-cond`, { opacity: 0 }, { opacity: 1, duration: 0.4, immediateRender: false }, s0 + 1.0)
+            tl2.fromTo(`${g} .fl-swirl path`, { opacity: 0.95 }, { opacity: 0.2, duration: 0.9, immediateRender: false }, s0 + 0.55)
           }
-          if (s.key === 'nuts') {
-            tl2.fromTo(
-              `${g} .fl-top .tp`,
-              { y: (k) => -(110 + ((k * 37) % 120)), opacity: 0, rotation: (k) => ((k * 53) % 90) - 45, transformOrigin: '50% 50%' },
-              { y: 0, opacity: 1, rotation: 0, duration: 0.5, stagger: { each: 0.012, from: 'random' }, ease: 'power2.out', immediateRender: false },
-              base + 0.56,
-            )
+          if (s2.key === 'fruit') rain('.fl-k-jelly .tp, .fl-k-fruit .tp', s0 + 0.3, 0.8, 0.07)
+          if (s2.key === 'ice') {
+            tl2.fromTo(`${g} .fl-ice`, { opacity: 0, y: -130, scale: 0.85, svgOrigin: '200 190' }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'power3.out', immediateRender: false }, s0 + 0.3)
+            tl2.fromTo(`${g} .fl-scoop`, { y: -170 }, { y: 0, duration: 0.5, stagger: 0.1, ease: 'power3.out', immediateRender: false }, s0 + 0.3)
           }
-          tl2.to(g, { rotate: i % 2 ? 2.4 : -2.4, duration: 1, ease: 'sine.inOut' }, base)
+          if (s2.key === 'nuts') rain('.fl-top .tp', s0 + 0.1, 0.55, 0.012)
+          tl2.to(g, { rotate: i % 2 ? 2.4 : -2.4, duration: 1, ease: 'sine.inOut' }, s0)
         })
         tl2.to(g, { scale: S(1.26), duration: B, ease: 'none' }, A)
 
@@ -467,7 +475,8 @@ export default function Stage({ ready, onFormed }) {
 
       /* ---------- 3. pointer: layered parallax, tilt, ingredients nudged away from the cursor ---------- */
       const bindPointer = () => {
-        if (!finePointer()) return
+        const fine = finePointer()
+        const amp = fine ? 1 : 0.55 // gentler on touch
         const items = [...el.querySelectorAll('[data-depth]')].map((n) => ({
           n,
           x: gsap.quickTo(n, 'x', { duration: 1.2, ease: 'power3.out' }),
@@ -479,22 +488,25 @@ export default function Stage({ ready, onFormed }) {
         const glass = el.querySelector('.sg0')
         const rY = gsap.quickTo(glass, 'rotationY', { duration: 1.4, ease: 'power3.out' })
         const rX = gsap.quickTo(glass, 'rotationX', { duration: 1.4, ease: 'power3.out' })
+        const sheen = el.querySelector(`${'.sg3'} .fl-sheen`)
+        const sheenX = sheen && gsap.quickTo(sheen, 'x', { duration: 1.2, ease: 'power3.out' }) // the glass highlight shifts with the cursor
         gsap.set(glass, { transformPerspective: 1200 })
-        const move = (e) => {
+        const apply = (cx, cy) => {
           const rr = el.getBoundingClientRect()
           if (rr.bottom < 0 || rr.top > window.innerHeight) return
           const W = window.innerWidth
           const H = window.innerHeight
-          const nx = e.clientX / W - 0.5
-          const ny = e.clientY / H - 0.5
-          rY(nx * 12)
-          rX(-ny * 7)
+          const nx = cx / W - 0.5
+          const ny = cy / H - 0.5
+          rY(nx * 12 * amp)
+          rX(-ny * 7 * amp)
+          sheenX && sheenX(nx * 140)
           items.forEach((it) => {
-            let ox = -nx * it.d
-            let oy = -ny * it.d
-            if (it.px !== null) {
-              const dx = it.px * W - e.clientX
-              const dy = it.py * H - e.clientY
+            let ox = -nx * it.d * amp
+            let oy = -ny * it.d * amp
+            if (fine && it.px !== null) {
+              const dx = it.px * W - cx
+              const dy = it.py * H - cy
               const dist = Math.hypot(dx, dy)
               if (dist < 220) {
                 const k = (1 - dist / 220) * 46
@@ -506,8 +518,19 @@ export default function Stage({ ready, onFormed }) {
             it.y(oy)
           })
         }
-        window.addEventListener('pointermove', move, { passive: true })
-        cleanups.push(() => window.removeEventListener('pointermove', move))
+        const onPointer = (e) => apply(e.clientX, e.clientY)
+        const onTouch = (e) => e.touches[0] && apply(e.touches[0].clientX, e.touches[0].clientY)
+        if (fine) window.addEventListener('pointermove', onPointer, { passive: true })
+        else {
+          // touch: the whole scene leans toward your finger while you drag or tap
+          window.addEventListener('touchstart', onTouch, { passive: true })
+          window.addEventListener('touchmove', onTouch, { passive: true })
+        }
+        cleanups.push(() => {
+          window.removeEventListener('pointermove', onPointer)
+          window.removeEventListener('touchstart', onTouch)
+          window.removeEventListener('touchmove', onTouch)
+        })
       }
     }, el)
 
@@ -520,7 +543,7 @@ export default function Stage({ ready, onFormed }) {
   }, [ready])
 
   return (
-    <section className="stage story" id="craft" ref={root}>
+    <section className="stage" id="top" ref={root}>
       <div className="hero-bg" aria-hidden="true">
         <div className="blob b-rose" data-depth="22"><i /></div>
         <div className="blob b-pista" data-depth="30"><i /></div>
