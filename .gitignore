@@ -1,0 +1,28 @@
+# dependencies & build output
+node_modules/
+dist/
+.vite/
+*.local
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# logs & caches
+*.log
+npm-debug.log*
+.cache/
+.eslintcache
+coverage/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# local reference material (not part of the site)
+/video/

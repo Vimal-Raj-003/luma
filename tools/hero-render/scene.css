@@ -1,0 +1,27 @@
+#app { position: fixed; inset: 0; overflow: hidden; background: #0c0604; }
+/* world = the photographs, 1792×941, placed so original x=0 sits at world x=120 (left extension for the right-shift) */
+.fit { position: absolute; left: 0; top: 0; width: 1792px; height: 941px; transform-origin: 0 0; }
+.cam { position: absolute; inset: 0; transform-origin: 1150px 300px; }
+.rise { position: absolute; inset: 0; }
+.layer { position: absolute; left: 0; top: 0; width: 1792px; height: 941px; display: block; }
+img.layer { user-select: none; }
+
+/* glass interior in image px (+120 for the extension) */
+.in { clip-path: path('M920 232 L1394 232 L1358 888 L954 888 Z');
+  --t: 0px; --b: 2000px; --e: 34px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--t) - var(--e)), #000 var(--t), #000 var(--b), transparent calc(var(--b) + var(--e)));
+          mask-image: linear-gradient(to bottom, transparent calc(var(--t) - var(--e)), #000 var(--t), #000 var(--b), transparent calc(var(--b) + var(--e))); }
+/* everything except the glass */
+.out { clip-path: path(evenodd, 'M0 0 H1792 V941 H0 Z M920 232 L1394 232 L1358 888 L954 888 Z'); }
+/* variant with the milk stream removed (soft-edged hole above the glass) */
+.nostream { -webkit-mask-image: linear-gradient(to right, #000 1080px, transparent 1116px, transparent 1250px, #000 1290px), linear-gradient(#000, #000);
+  -webkit-mask-size: 100% 275px, 100% 666px; -webkit-mask-position: 0 0, 0 275px; -webkit-mask-repeat: no-repeat;
+          mask-image: linear-gradient(to right, #000 1080px, transparent 1116px, transparent 1250px, #000 1290px), linear-gradient(#000, #000);
+          mask-size: 100% 275px, 100% 666px; mask-position: 0 0, 0 275px; mask-repeat: no-repeat; }
+.scoop { clip-path: path('M1005 262 C998 130 1080 36 1157 34 C1235 36 1317 130 1310 262 Z');
+  -webkit-mask-image: radial-gradient(ellipse 170px 150px at 1157px 150px, #000 78%, transparent 100%); mask-image: radial-gradient(ellipse 170px 150px at 1157px 150px, #000 78%, transparent 100%); transform-origin: 1157px 262px; }
+
+.shade { position: absolute; inset: 0; pointer-events: none; }
+.vignette { background: radial-gradient(120% 90% at 66% 55%, transparent 58%, rgba(10, 5, 3, 0.5) 100%); }
+.grain { opacity: 0.07; mix-blend-mode: overlay; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+.black { background: #0c0604; }
