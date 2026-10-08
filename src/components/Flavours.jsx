@@ -1,4 +1,4 @@
-import FaloodaGlass from './FaloodaGlass'
+import PhotoGlass from './PhotoGlass'
 import { FLAVOURS, SITE } from '../data/site'
 
 export function SectionHead({ eyebrow, title, children, center = false }) {
@@ -27,7 +27,7 @@ export default function Flavours() {
                 <div className="card-media">
                   <div className="card-glow" aria-hidden="true" />
                   <div className="glass-box">
-                    <FaloodaGlass palette={f.id} lite />
+                    <PhotoGlass flavour={f.id} />
                   </div>
                 </div>
                 <div className="card-body">

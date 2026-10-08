@@ -26,6 +26,8 @@ const STEPS = [
 const STARTS = [1.5, 3, 4.5, 6, 7.5, 9]
 const END = 10
 
+const LABELS = [{ n: '00', title: 'The empty glass' }, ...STEPS.map((s, i) => ({ n: `0${i + 1}`, title: s.title }))]
+
 export default function PhotoStory() {
   const root = useRef(null)
 
@@ -35,6 +37,8 @@ export default function PhotoStory() {
     const fit = el.querySelector('.ps-fit')
     const cam = el.querySelector('.ps-cam')
     const steps = [...el.querySelectorAll('.step')]
+    const hud = [...el.querySelectorAll('.hl')]
+    const pctEl = el.querySelector('.ps-pct b')
     const reduced = prefersReduced()
     const $ = (s) => el.querySelector(s)
 
@@ -80,10 +84,23 @@ export default function PhotoStory() {
                 el.style.setProperty('--p', Math.max(0, Math.min(1, (u - 1.5) / 8.5)).toFixed(3))
                 el.dataset.pct = Math.round(self.progress * 100)
                 el.dataset.step = i
+                hud.forEach((h, n) => h.classList.toggle('on', n === i + 1))
+                if (pctEl) pctEl.textContent = String(Math.round(self.progress * 100)).padStart(2, '0')
               },
             },
       })
 
+      // continuity: the photo window arrives scaled up (the Falooda has just grown toward you in the hero) and settles
+      if (!reduced) {
+        gsap.fromTo(view, { scale: 1.2, y: 110, borderRadius: 110 }, {
+          scale: 1, y: 0, borderRadius: window.innerWidth < 900 ? 26 : 32, ease: 'none',
+          scrollTrigger: { trigger: el, start: 'top 98%', end: 'top top', scrub: 0.7 },
+        })
+        gsap.fromTo(el.querySelectorAll('.ps-left .h2, .ps-left .eyebrow'), { y: 60, opacity: 0 }, {
+          y: 0, opacity: 1, ease: 'none', stagger: 0.1,
+          scrollTrigger: { trigger: el, start: 'top 85%', end: 'top 25%', scrub: 0.7 },
+        })
+      }
       // the camera drifts in a few percent over the whole build
       tl.to(cam, { scale: 1.05, duration: END, ease: 'sine.inOut' }, 0)
       // 15–30 %  syrup rises from the bottom of the glass
@@ -193,6 +210,17 @@ export default function PhotoStory() {
             </div>
           </div>
           <div className="ps-shade" aria-hidden="true" />
+          <div className="ps-hud" aria-hidden="true">
+            <div className="ps-labels">
+              {LABELS.map((l, i) => (
+                <span className={`hl${i === 0 ? ' on' : ''}`} key={l.n}>
+                  <i>{l.n}</i>
+                  {l.title}
+                </span>
+              ))}
+            </div>
+            <div className="ps-pct"><b>00</b>%</div>
+          </div>
         </div>
       </div>
     </section>

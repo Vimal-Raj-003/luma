@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { SITE } from '../data/site'
 import { prefersReduced, scene } from '../hooks/motion'
@@ -18,12 +18,37 @@ export const Logo = ({ light = false }) => (
 
 export default function Nav({ ready }) {
   const [solid, setSolid] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const links = useRef(null)
+  const ind = useRef(null)
 
   useEffect(() => {
-    const on = () => setSolid(window.scrollY > window.innerHeight * 0.82) // over the dark video until it has scrolled away
+    let raf = 0
+    const SECTIONS = ['#craft', '#mood', '#build', '#visit']
+    const on = () => {
+      const y = window.scrollY
+      setScrolled(y > 24)
+      setSolid(y > window.innerHeight * 0.6) // the dark hero is washed out to cream by then
+      // scroll-spy: the last section whose top has passed 40% of the viewport; none while on the hero
+      let active = -1
+      SECTIONS.forEach((id, i) => {
+        const e = document.querySelector(id)
+        if (e && e.getBoundingClientRect().top <= window.innerHeight * 0.4) active = i
+      })
+      const a = [...links.current.children].filter((c) => c.tagName === 'A')
+      a.forEach((c, i) => c.classList.toggle('on', i === active))
+      const el = a[active]
+      if (!ind.current) return
+      if (!el) return void gsap.to(ind.current, { opacity: 0, duration: 0.3 })
+      gsap.to(ind.current, { x: el.offsetLeft, scaleX: el.offsetWidth / 40, opacity: 1, duration: 0.55, ease: 'power3.out', overwrite: true })
+    }
+    const tick = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(on) }
     on()
-    window.addEventListener('scroll', on, { passive: true })
-    return () => window.removeEventListener('scroll', on)
+    window.addEventListener('scroll', tick, { passive: true })
+    window.addEventListener('resize', tick)
+    // pinned sections move after layout settles: re-evaluate once things are measured
+    const t = setTimeout(on, 1800)
+    return () => { window.removeEventListener('scroll', tick); window.removeEventListener('resize', tick); clearTimeout(t); cancelAnimationFrame(raf) }
   }, [])
 
   // logo softly reveals once the curtain lifts
@@ -51,14 +76,15 @@ export default function Nav({ ready }) {
   }
 
   return (
-    <header className={`nav${solid ? ' solid' : ' on-dark'}`}>
+    <header className={`nav${solid ? ' solid' : ' on-dark'}${scrolled ? ' scrolled' : ''}`}>
       <div className="nav-in">
         <Logo />
-        <nav className="nav-links" aria-label="Primary">
+        <nav className="nav-links" aria-label="Primary" ref={links}>
           <a href="#story" onClick={go}>Our Craft</a>
           <a href="#mood">Flavours</a>
           <a href="#build">Build Yours</a>
           <a href="#visit">Visit</a>
+          <span className="nav-ind" ref={ind} aria-hidden="true" />
         </nav>
         <a className="btn btn-dark btn-sm" href={SITE.contact.orderHref}>
           Order Now

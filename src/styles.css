@@ -124,12 +124,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .nav { position: fixed; inset: 0 0 auto; z-index: 50; padding-block: 14px; transition: background-color 0.5s, box-shadow 0.5s, padding 0.5s var(--ease); }
 .nav.solid { background: rgba(255, 251, 243, 0.82); backdrop-filter: blur(14px) saturate(1.3); -webkit-backdrop-filter: blur(14px) saturate(1.3); box-shadow: 0 1px 0 var(--line); padding-block: 10px; }
 .nav-in { width: min(1240px, 100% - 2 * var(--gut)); margin-inline: auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.logo { display: inline-flex; align-items: center; gap: 0.55rem; font-family: var(--serif); font-size: 1.55rem; font-weight: 500; letter-spacing: 0.08em; color: var(--plum); }
+.logo { display: inline-flex; align-items: center; gap: 0.55rem; font-family: var(--serif); font-size: 1.7rem; font-weight: 500; letter-spacing: 0.08em; color: var(--plum); }
 .logo.light { color: var(--cream); }
-.nav-links { display: none; gap: 2.2rem; font-size: 0.9rem; font-weight: 600; }
+.nav-links { position: relative; display: none; gap: 2.4rem; font-size: 1rem; font-weight: 600; }
 .nav-links a { position: relative; padding-block: 6px; }
-.nav-links a::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--rose); transform: scaleX(0); transform-origin: left; transition: transform 0.5s var(--ease); }
-.nav-links a:hover::after { transform: scaleX(1); }
+.nav-links a { transition: color 0.3s; }
+.nav-links a.on { color: var(--rose-d); }
+.nav.on-dark .nav-links a.on { color: #ff9fbd; }
+.nav-ind { position: absolute; left: 0; bottom: -2px; height: 2.5px; width: 40px; border-radius: 3px; background: linear-gradient(90deg, var(--rose), var(--mango)); transform-origin: 0 50%; opacity: 0; will-change: transform; }
+.nav-links a:hover { color: var(--rose-d); }
+.nav.on-dark .nav-links a:hover { color: #ff9fbd; }
 @media (min-width: 900px) { .nav-links { display: flex; } }
 
 /* ==========================================================================
@@ -530,39 +534,57 @@ button { font: inherit; color: inherit; cursor: pointer; }
    Video hero (front page)
    ========================================================================== */
 .vhero { position: relative; height: 100svh; min-height: 560px; overflow: clip; background: #0c0604; color: var(--cream); isolation: isolate; }
-.vh-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 68% 50%; display: block; background: #0c0604; pointer-events: none; }
+.vh-bg { position: absolute; inset: 0; will-change: transform; }
+.vh-media { position: absolute; inset: -14px; width: calc(100% + 28px); height: calc(100% + 28px); object-fit: cover; object-position: 68% 50%; display: block; background: #0c0604; pointer-events: none; will-change: transform; }
 /* readability: soft dark gradient behind the copy (left on desktop, bottom on phones) + gentle top fade for the nav */
 .vh-shade { position: absolute; inset: 0; pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(12, 6, 4, 0.82) 0%, rgba(12, 6, 4, 0.58) 28%, rgba(12, 6, 4, 0.18) 48%, transparent 62%),
-    linear-gradient(180deg, rgba(12, 6, 4, 0.5), transparent 20%); }
-.vh-grid { position: relative; z-index: 2; height: 100%; display: grid; align-items: center; }
-.vh-copy { max-width: min(36rem, 46vw); padding-top: 40px; }
-.vhero .eyebrow { color: #ffc89a; }
+    linear-gradient(90deg, rgba(12, 6, 4, 0.84) 0%, rgba(12, 6, 4, 0.6) 28%, rgba(12, 6, 4, 0.18) 48%, transparent 62%),
+    linear-gradient(180deg, rgba(12, 6, 4, 0.55), transparent 20%); }
+.vh-grid { position: relative; z-index: 2; height: 100%; display: grid; align-items: center; will-change: transform; }
+.vh-copy { max-width: min(36rem, 46vw); padding-top: 40px; will-change: transform, opacity; }
+.vh-logo { display: inline-flex; align-items: center; gap: 0.7rem; margin: 0 0 1.4rem; font-family: var(--serif); font-weight: 500; font-size: 1.45rem; letter-spacing: 0.3em; color: #ffd9b0; }
+.vh-logo svg { color: #ffd9b0; will-change: transform; }
 .vhero h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(3.4rem, 6.6vw, 6.4rem); line-height: 0.98; letter-spacing: -0.035em; font-variation-settings: 'opsz' 144; text-shadow: 0 6px 40px rgba(10, 5, 3, 0.5); }
 .vhero h1 em { font-style: italic; color: #ff9fbd; }
 .vh-line { display: block; }
 .vh-mask { display: inline-block; vertical-align: top; overflow: hidden; padding: 0.04em 0.06em 0.16em; margin-bottom: -0.2em; }
 .vh-word { display: inline-block; will-change: transform; transform-origin: 0 100%; }
-.vh-sub { margin-top: 1.3rem; max-width: 24rem; color: rgba(255, 244, 227, 0.86); font-size: clamp(1rem, 1.5vw, 1.2rem); }
+.vh-sub { margin-top: 1.3rem; max-width: 24rem; color: rgba(255, 244, 227, 0.88); font-size: clamp(1rem, 1.5vw, 1.2rem); }
 .vh-cta { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 1.8rem; }
 .btn-glass { border-color: rgba(255, 244, 227, 0.75); color: var(--cream); background: rgba(255, 244, 227, 0.1); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .btn-glass:hover { background: rgba(255, 244, 227, 0.2); border-color: #fff; }
-.vh-wave { position: absolute; left: 0; bottom: -1px; width: 100%; height: clamp(26px, 4vw, 56px); }
-.vhero.still .vh-media { object-position: 68% 50%; }
+/* dark berry/plum → cream. Starts below the hero, slides up over it while the hero is pinned. */
+.vh-wash { position: absolute; left: 0; right: 0; top: 100%; height: 230%; z-index: 4; pointer-events: none; will-change: transform;
+  background: linear-gradient(0deg, var(--paper) 0%, var(--paper) 42%, #f6e3e6 50%, #e3b6c6 58%, #a8618a 68%, #5a2250 78%, rgba(47, 15, 43, 0.55) 88%, rgba(47, 15, 43, 0) 100%); }
+.vhero.still .vh-wash { display: none; }
 
-@media (max-width: 899px), (max-aspect-ratio: 1/1) {
+/* never crop the Falooda: on very wide / landscape-phone frames show the whole video and fade its sides into the dark */
+@media (min-aspect-ratio: 19/10) {
+  .vh-media { object-fit: contain; object-position: 68% 50%; }
+  .vh-bg { -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%); }
+}
+@media (max-height: 520px) and (min-aspect-ratio: 3/2) {
+  .vhero { min-height: 0; }
+  .vh-media { object-fit: contain; object-position: 72% 50%; }
+  .vh-logo { display: none; }
+  .vhero h1 { font-size: clamp(2.2rem, 7vh, 3rem); }
+  .vh-sub { margin-top: 0.7rem; font-size: 0.9rem; }
+  .vh-cta { margin-top: 1rem; }
+  .vh-cta .btn { min-height: 44px; }
+}
+@media (max-aspect-ratio: 1/1) {
   .vh-media { object-position: 50% 0; }
   .vh-shade { background: linear-gradient(0deg, rgba(12, 6, 4, 0.94) 0%, rgba(12, 6, 4, 0.78) 30%, rgba(12, 6, 4, 0.2) 52%, transparent 66%), linear-gradient(180deg, rgba(12, 6, 4, 0.5), transparent 16%); }
   .vh-grid { align-items: end; padding-bottom: clamp(36px, 7svh, 70px); }
   .vh-copy { max-width: none; padding-top: 0; }
+  .vh-logo { display: none; } /* the nav already shows the logo on phones: save the space */
   .vhero h1 { font-size: clamp(2.5rem, 12vw, 3.6rem); }
   .vh-sub { margin-top: 0.8rem; font-size: 0.98rem; }
   .vh-cta { margin-top: 1.1rem; }
   .vh-cta .btn { min-height: 50px; }
-  .vhero .eyebrow { display: none; }
 }
-@media (max-height: 700px) and (max-width: 899px) { .vhero h1 { font-size: clamp(2.2rem, 10.5vw, 2.9rem); } .vh-sub { font-size: 0.92rem; } }
+@media (max-height: 700px) and (max-aspect-ratio: 1/1) { .vhero h1 { font-size: clamp(2.2rem, 10.5vw, 2.9rem); } .vh-sub { font-size: 0.92rem; } }
 
 /* nav over the dark video */
 .nav.on-dark .logo { color: var(--cream); }
@@ -610,3 +632,29 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .sg-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 62% 50%; transform-origin: 62% 50%; will-change: transform; }
 .sg-stage { --mh: min(46svh, 440px); }
 @media (min-width: 900px) { .sg-stage { --mh: min(58svh, 520px); } }
+
+/* nav: a soft blur as soon as the page moves, solid cream once the dark hero is gone */
+.nav.scrolled { backdrop-filter: blur(12px) saturate(1.2); -webkit-backdrop-filter: blur(12px) saturate(1.2); }
+.nav.scrolled.on-dark { background: rgba(12, 6, 4, 0.42); }
+
+/* story HUD: the current step and overall progress, tied to scroll */
+.ps-hud { position: absolute; inset: auto 0 0 0; padding: 18px 20px; display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; pointer-events: none; background: linear-gradient(0deg, rgba(10, 5, 3, 0.7), transparent); z-index: 2; }
+.ps-labels { position: relative; height: 2.1rem; min-width: 60%; }
+.hl { position: absolute; left: 0; bottom: 0; display: inline-flex; align-items: baseline; gap: 0.7rem; font-family: var(--serif); font-size: clamp(1.15rem, 2.2vw, 1.6rem); color: var(--cream); white-space: nowrap; opacity: 0; transform: translateY(18px); transition: opacity 0.5s var(--ease), transform 0.7s var(--ease); }
+.hl i { font-style: italic; font-size: 0.8em; color: #ff9fbd; }
+.hl.on { opacity: 1; transform: none; }
+.ps-pct { font-family: var(--serif); font-size: clamp(1.6rem, 3vw, 2.4rem); line-height: 1; color: var(--cream); font-variant-numeric: tabular-nums; }
+.ps-pct b { font-weight: 500; }
+.ps-pct { opacity: 0.9; }
+.pstory .ps-view { will-change: transform; }
+
+/* photographic glass tile (flavour cards + selector) */
+.pg { position: relative; width: 100%; height: 100%; aspect-ratio: 510 / 880; overflow: hidden; border-radius: 20px; background: #140b07; isolation: isolate; box-shadow: 0 22px 40px -22px rgba(47, 15, 43, 0.6); }
+.pg-l { position: absolute; display: block; max-width: none; width: 351.37%; height: auto; left: -176.47%; top: -2.27%; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+.pg-tint { transition: filter 1.3s var(--ease); will-change: filter; }
+.pg-in { clip-path: polygon(51.34% 24.66%, 77.79% 24.66%, 75.78% 94.37%, 53.24% 94.37%); }
+.pg-scoop { clip-path: ellipse(8.6% 12.4% at 64.6% 16%); }
+.card-media .glass-box { aspect-ratio: 510 / 880; }
+.card-media::before { display: none; }
+.sel-glass-in { aspect-ratio: 510 / 880; }
+.sel-glass-in .pg { border-radius: 26px; box-shadow: 0 40px 70px -34px rgba(0, 0, 0, 0.55); }

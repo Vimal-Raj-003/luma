@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import FaloodaGlass from './FaloodaGlass'
+import PhotoGlass from './PhotoGlass'
 import { ING } from './Ingredients'
 import { SELECTOR } from '../data/site'
 import { finePointer, prefersReduced } from '../hooks/motion'
@@ -39,7 +39,6 @@ export default function FlavourSelector() {
       .to(el.querySelectorAll('.sel-w'), { yPercent: -115, duration: 0.5, stagger: 0.05, ease: 'power3.in' }, 0)
       .to(el.querySelectorAll('.sel-sub'), { y: -24, opacity: 0, duration: 0.4, stagger: 0.04, ease: 'power2.in' }, 0)
       .to(el.querySelector('.sel-turn'), { rotationY: -75, scale: 0.92, duration: 0.5, ease: 'power2.in', transformPerspective: 1100 }, 0)
-      .to(el.querySelectorAll('.sel-glass-in .fl-layer'), { y: 36, opacity: 0, duration: 0.4, stagger: { each: 0.05, from: 'start' }, ease: 'power2.in' }, 0.05)
   }
 
   useEffect(() => {
@@ -72,7 +71,6 @@ export default function FlavourSelector() {
       0,
     )
       .fromTo(el.querySelector('.sel-turn'), { rotationY: 75, scale: 0.92 }, { rotationY: 0, scale: 1, duration: 1.2, ease: 'expo.out', transformPerspective: 1100 }, 0.15)
-      .fromTo(el.querySelectorAll('.sel-glass-in .fl-layer'), { y: -50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: 'power3.out' }, 0.3)
       .fromTo(el.querySelectorAll('.sel-w'), { yPercent: 118, rotate: 5 }, { yPercent: 0, rotate: 0, duration: 1.1, stagger: 0.08, ease: 'expo.out' }, 0.45)
       .fromTo(el.querySelectorAll('.sel-sub'), { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, stagger: 0.08, ease: 'power3.out' }, 0.7)
       .fromTo(
@@ -162,7 +160,6 @@ export default function FlavourSelector() {
           <div className="sel-disc" style={{ background: f.accent }} aria-hidden="true" />
           <div className="sel-fl a" aria-hidden="true"><div className="sel-fl-m"><div className="float" style={{ '--fy': '12px', '--dur': '5s' }}><ING.petal /></div></div></div>
           <div className="sel-fl b" aria-hidden="true"><div className="sel-fl-m"><div className="float" style={{ '--fy': '16px', '--dur': '6s' }}><ING.pistachio /></div></div></div>
-          <div className="sel-fl c" aria-hidden="true"><div className="sel-fl-m"><div className="float" style={{ '--fy': '10px', '--dur': '4.6s' }}><ING.cube color={f.accent} /></div></div></div>
           <div className="sel-parts" aria-hidden="true">
             {PARTICLES.map((i) => (
               <i key={i} className="sel-p" style={{ background: i % 3 ? f.accent : '#fff', borderRadius: i % 2 ? '50% 0 50% 50%' : '50%' }} />
@@ -171,7 +168,7 @@ export default function FlavourSelector() {
           <div className="sel-enter">
             <div className="sel-turn">
               <div className="sel-glass-in">
-                <FaloodaGlass palette={id} animated />
+                <PhotoGlass flavour={id} />
               </div>
             </div>
           </div>
