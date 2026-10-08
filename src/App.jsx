@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Nav from './components/Nav'
-import VideoHero from './components/VideoHero'
+import Hero from './components/Hero'
 import PhotoStory from './components/PhotoStory'
 import FlavourSelector from './components/FlavourSelector'
 import Marquee from './components/Marquee'
@@ -39,7 +39,7 @@ export default function App() {
     <>
       <Nav ready={ready} />
       <main>
-        <VideoHero />
+        <Hero />
         <PhotoStory />
         <FlavourSelector />
         <Marquee />
