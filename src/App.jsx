@@ -10,17 +10,11 @@ import { preloadAssets } from './assets'
 const Below = lazy(() => import('./components/Below'))
 
 export default function App() {
-  const [ready, setReady] = useState(false)
   const [below, setBelow] = useState(() => typeof window !== 'undefined' && window.location.hash.length > 1)
   useMicro() // nav + hero buttons (the rest is scoped inside <Below/>)
 
-  // nav reveal once fonts are in (max ~0.5s); sprite assets for the flavour sections are decoded in the background
-  useEffect(() => {
-    const go = () => setTimeout(() => setReady(true), 80)
-    const fonts = document.fonts ? document.fonts.ready : Promise.resolve()
-    Promise.race([fonts, new Promise((r) => setTimeout(r, 450))]).then(go)
-    preloadAssets()
-  }, [])
+  // sprite assets for the flavour sections are decoded in the background
+  useEffect(() => { preloadAssets() }, [])
 
   // mount the rest of the page once the hero is under way (idle), or immediately if the visitor interacts / follows an anchor
   useEffect(() => {
@@ -41,7 +35,7 @@ export default function App() {
 
   return (
     <>
-      <Nav ready={ready} />
+      <Nav />
       <main>
         <Hero />
         {below && (

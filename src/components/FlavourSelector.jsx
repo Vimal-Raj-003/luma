@@ -9,6 +9,9 @@ import { finePointer, prefersReduced } from '../hooks/motion'
 gsap.registerPlugin(ScrollTrigger)
 
 const ORDER = ['rose', 'strawberry', 'mango', 'pistachio', 'chocolate']
+// the two ingredients floating beside the glass belong to the flavour and are swapped (scale/spin out → in) when it changes
+const Mango = () => <ING.cube color="#FFC247" />
+const FLOATERS = { rose: [ING.petal, ING.berry], strawberry: [ING.berry, ING.jelly], mango: [Mango, ING.almond], pistachio: [ING.pistachio, ING.basil], chocolate: [ING.almond, ING.cherry] }
 const PARTICLES = Array.from({ length: 16 }, (_, i) => i)
 
 /*
@@ -20,6 +23,7 @@ const PARTICLES = Array.from({ length: 16 }, (_, i) => i)
 export default function FlavourSelector() {
   const [id, setId] = useState('rose')
   const f = SELECTOR[id]
+  const [FA, FB] = FLOATERS[id]
   const root = useRef(null)
   const wash = useRef(null)
   const busy = useRef(false)
@@ -38,6 +42,7 @@ export default function FlavourSelector() {
       .timeline({ onComplete: () => setId(k) })
       .to(el.querySelectorAll('.sel-w'), { yPercent: -115, duration: 0.5, stagger: 0.05, ease: 'power3.in' }, 0)
       .to(el.querySelectorAll('.sel-sub'), { y: -24, opacity: 0, duration: 0.4, stagger: 0.04, ease: 'power2.in' }, 0)
+      .to(el.querySelectorAll('.sel-fl-m'), { scale: 0, rotate: 120, opacity: 0, duration: 0.45, stagger: 0.06, ease: 'power2.in' }, 0)
       .to(el.querySelector('.sel-turn'), { rotationY: -75, scale: 0.92, duration: 0.5, ease: 'power2.in', transformPerspective: 1100 }, 0)
   }
 
@@ -72,6 +77,7 @@ export default function FlavourSelector() {
     )
       .fromTo(el.querySelector('.sel-turn'), { rotationY: 75, scale: 0.92 }, { rotationY: 0, scale: 1, duration: 1.2, ease: 'expo.out', transformPerspective: 1100 }, 0.15)
       .fromTo(el.querySelectorAll('.sel-w'), { yPercent: 118, rotate: 5 }, { yPercent: 0, rotate: 0, duration: 1.1, stagger: 0.08, ease: 'expo.out' }, 0.45)
+      .fromTo(el.querySelectorAll('.sel-fl-m'), { scale: 0, rotate: -120, opacity: 0 }, { scale: 1, rotate: 0, opacity: 1, duration: 1.1, stagger: 0.14, ease: 'back.out(1.7)' }, 0.6)
       .fromTo(el.querySelectorAll('.sel-sub'), { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, stagger: 0.08, ease: 'power3.out' }, 0.7)
       .fromTo(
         el.querySelectorAll('.sel-p'),
@@ -158,8 +164,8 @@ export default function FlavourSelector() {
 
         <div className="sel-visual">
           <div className="sel-disc" style={{ background: f.accent }} aria-hidden="true" />
-          <div className="sel-fl a" aria-hidden="true"><div className="sel-fl-m"><div className="float" style={{ '--fy': '12px', '--dur': '5s' }}><ING.petal /></div></div></div>
-          <div className="sel-fl b" aria-hidden="true"><div className="sel-fl-m"><div className="float" style={{ '--fy': '16px', '--dur': '6s' }}><ING.pistachio /></div></div></div>
+          <div className="sel-fl a" aria-hidden="true"><div className="sel-fl-m"><div className="float" key={id} style={{ '--fy': '12px', '--dur': '5s' }}><FA /></div></div></div>
+          <div className="sel-fl b" aria-hidden="true"><div className="sel-fl-m"><div className="float" key={id} style={{ '--fy': '16px', '--dur': '6s' }}><FB /></div></div></div>
           <div className="sel-parts" aria-hidden="true">
             {PARTICLES.map((i) => (
               <i key={i} className="sel-p" style={{ background: i % 3 ? f.accent : '#fff', borderRadius: i % 2 ? '50% 0 50% 50%' : '50%' }} />

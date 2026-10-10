@@ -57,6 +57,19 @@ export default function Builder() {
     })
   }
 
+  // a product card's Order Now / click lands here with that flavour chosen
+  useEffect(() => {
+    const MAP = { rose: ['rose'], mango: ['mango'], pistachio: ['pistachio'], chocolate: ['chocolate', 'chocolate'], strawberry: ['rose', 'strawberry'], dryfruit: ['pistachio', 'kulfi'] }
+    const on = (e) => {
+      const m = MAP[e.detail?.id]
+      if (!m) return
+      setBase(m[0]); if (m[1]) setIce(m[1])
+      note('base', m[0])
+    }
+    window.addEventListener('luma:build', on)
+    return () => window.removeEventListener('luma:build', on)
+  }, [])
+
   const root = useRef(null)
   useLayoutEffect(() => {
     if (prefersReduced()) return

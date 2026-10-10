@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "frame:empty": "node tools/make-empty-frame.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",

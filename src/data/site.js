@@ -10,7 +10,7 @@ export const SITE = {
     phoneHref: '#contact',
     email: '[hello@yourdomain]',
     instagramHref: '#',
-    orderHref: '#flavours',
+    orderHref: '#build',
     directionsHref: '#',
   },
   address: ['[Street address line 1]', '[Area, City, Postcode]'],

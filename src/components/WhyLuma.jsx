@@ -36,11 +36,23 @@ const Rose = () => (
   </svg>
 )
 
+const Lock = () => (
+  <svg viewBox="0 0 64 64" className="ico ico-lock" aria-hidden="true">
+    <g className="ico-bob">
+      <path d="M21 28v-6a11 11 0 0 1 22 0v6" fill="none" stroke="#5F9A4C" strokeWidth="4" strokeLinecap="round" />
+      <rect x="13" y="28" width="38" height="28" rx="8" fill="#A9D58B" />
+      <circle cx="32" cy="41" r="4.2" fill="#fff" />
+      <path d="M32 44v6" stroke="#fff" strokeWidth="3.2" strokeLinecap="round" />
+    </g>
+  </svg>
+)
+
 const ITEMS = [
   { i: <Leaf />, t: 'Fresh Ingredients', d: 'Real fruit, nuts and rose — nothing artificial.' },
   { i: <Drop />, t: 'Made Fresh', d: 'Layered to order, chilled and served at once.' },
   { i: <Scoop />, t: 'Premium Ice Cream', d: 'Slow-churned, creamy and never icy.' },
   { i: <Rose />, t: 'Authentic Flavours', d: 'Classic recipes with a modern, lighter hand.' },
+  { i: <Lock />, t: 'Secure Ordering', d: 'Simple, safe ordering from tap to table.' },
 ]
 
 export default function WhyLuma() {
@@ -50,7 +62,7 @@ export default function WhyLuma() {
         <SectionHead eyebrow="Why LUMA" title={<>Small details. <em>Big delight.</em></>} center />
         <ul className="why-grid">
           {ITEMS.map((x, n) => (
-            <li key={x.t} className="why-item" data-reveal data-delay={n * 0.07}>
+            <li key={x.t} className="why-item">
               <div className="why-ico">{x.i}</div>
               <h3>{x.t}</h3>
               <p>{x.d}</p>

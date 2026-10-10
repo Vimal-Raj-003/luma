@@ -29,3 +29,6 @@ desktop.ini
 
 # source archive of the hero frames (the extracted frames live in public/hero-frames)
 /hero frames/
+
+# local reference recordings
+/anime/

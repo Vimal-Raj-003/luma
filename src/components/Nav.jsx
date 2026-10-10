@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
-import { SITE } from '../data/site'
+import { FLAVOURS, SITE } from '../data/site'
+import { cartCount, setQty, useStore } from '../store'
 import { prefersReduced } from '../hooks/motion'
 
 export const Logo = ({ light = false }) => (
@@ -16,9 +17,32 @@ export const Logo = ({ light = false }) => (
   </a>
 )
 
-export default function Nav({ ready }) {
+export default function Nav() {
+  const store = useStore()
+  const n = cartCount(store)
+  const [cart, setCart] = useState(false)
+  const badge = useRef(null)
+  const panel = useRef(null)
+  const prevN = useRef(n)
+  const total = FLAVOURS.reduce((a, f) => a + (store.items[f.id] || 0) * f.price, 0)
+
+  useEffect(() => { // the badge pops whenever something is added
+    if (n > prevN.current && badge.current && !prefersReduced()) gsap.fromTo(badge.current, { scale: 1.9 }, { scale: 1, duration: 0.8, ease: 'elastic.out(1.2, 0.45)' })
+    prevN.current = n
+  }, [n])
+  useEffect(() => {
+    if (!cart) return
+    if (panel.current && !prefersReduced()) gsap.fromTo(panel.current, { y: -12, scale: 0.94, opacity: 0, transformOrigin: '100% 0%' }, { y: 0, scale: 1, opacity: 1, duration: 0.5, ease: 'expo.out' })
+    const key = (e) => e.key === 'Escape' && setCart(false)
+    const away = (e) => !e.target.closest('.cart-wrap') && setCart(false)
+    window.addEventListener('keydown', key)
+    window.addEventListener('pointerdown', away)
+    return () => { window.removeEventListener('keydown', key); window.removeEventListener('pointerdown', away) }
+  }, [cart])
+
   const [solid, setSolid] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [dark, setDark] = useState(false)
   const links = useRef(null)
   const ind = useRef(null)
 
@@ -29,6 +53,8 @@ export default function Nav({ ready }) {
       const y = window.scrollY
       setScrolled(y > 24)
       setSolid(y > window.innerHeight * 0.6) // the dark hero is washed out to cream by then
+      // over a dark scene (pinned flavour / making / finale / signature) the bar goes back to its light-on-dark look
+      setDark([...document.querySelectorAll('.scene, .signature')].some((e) => { const r = e.getBoundingClientRect(); return r.top <= 40 && r.bottom >= 40 }))
       // scroll-spy: the last section whose top has passed 40% of the viewport; none while on the hero
       let active = -1
       SECTIONS.forEach((id, i) => {
@@ -51,23 +77,8 @@ export default function Nav({ ready }) {
     return () => { window.removeEventListener('scroll', tick); window.removeEventListener('resize', tick); clearTimeout(t); cancelAnimationFrame(raf) }
   }, [])
 
-  // logo softly reveals once the curtain lifts
-  useLayoutEffect(() => {
-    if (prefersReduced()) return
-    gsap.set('.nav .logo, .nav-links a, .nav .btn', { opacity: 0 })
-  }, [])
-  useEffect(() => {
-    if (!ready || prefersReduced()) return
-    const ctx = gsap.context(() => {
-      gsap.fromTo('.nav .logo', { clipPath: 'inset(0 100% 0 0)', x: -16, opacity: 0 }, { clipPath: 'inset(0 0% 0 0)', x: 0, opacity: 1, duration: 1.5, ease: 'expo.out', delay: 0.2 })
-      gsap.fromTo('.nav .logo svg', { rotate: -120, scale: 0.3 }, { rotate: 0, scale: 1, duration: 1.4, ease: 'expo.out', delay: 0.2 })
-      gsap.fromTo('.nav-links a, .nav .btn', { y: -16, opacity: 0 }, { y: 0, opacity: 1, duration: 1, stagger: 0.09, ease: 'power3.out', delay: 0.7 })
-    })
-    return () => ctx.revert()
-  }, [ready])
-
   return (
-    <header className={`nav${solid ? ' solid' : ' on-dark'}${scrolled ? ' scrolled' : ''}`}>
+    <header className={`nav${solid && !dark ? ' solid' : ' on-dark'}${scrolled ? ' scrolled' : ''}`}>
       <div className="nav-in">
         <Logo />
         <nav className="nav-links" aria-label="Primary" ref={links}>
@@ -76,9 +87,37 @@ export default function Nav({ ready }) {
           <a href="#visit">Visit</a>
           <span className="nav-ind" ref={ind} aria-hidden="true" />
         </nav>
-        <a className="btn btn-dark btn-sm" href={SITE.contact.orderHref}>
-          Order Now
-        </a>
+        <div className="nav-end">
+          <div className="cart-wrap">
+            <button className="cart-btn" onClick={() => setCart((v) => !v)} aria-expanded={cart} aria-label={`Cart, ${n} item${n === 1 ? '' : 's'}`}>
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 8h14l-1.2 11a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8Zm4 0V6.5a3 3 0 0 1 6 0V8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              {n > 0 && <b className="cart-n" ref={badge}>{n}</b>}
+            </button>
+            {cart && (
+              <div className="cart-panel" ref={panel} role="dialog" aria-label="Your cart">
+                {n === 0 ? <p className="cart-empty">Your cart is empty.<br />Pick a falooda below.</p> : (
+                  <>
+                    <ul>
+                      {FLAVOURS.filter((f) => store.items[f.id]).map((f) => (
+                        <li key={f.id}>
+                          <span>{f.name}</span>
+                          <span className="cart-q">
+                            <button onClick={() => setQty(f.id, store.items[f.id] - 1)} aria-label={`Fewer ${f.name}`}>−</button>
+                            <b>{store.items[f.id]}</b>
+                            <button onClick={() => setQty(f.id, store.items[f.id] + 1)} aria-label={`More ${f.name}`}>+</button>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="cart-total"><span>Total</span><b>{SITE.currency}{total}</b></div>
+                    <button className="btn btn-rose btn-sm cart-go" disabled>Checkout opens soon</button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          <a className="btn btn-dark btn-sm" href={SITE.contact.orderHref}>Order Now</a>
+        </div>
       </div>
     </header>
   )

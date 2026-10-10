@@ -88,25 +88,37 @@ export function useMicro(scope) {
 
     const root = scope?.current || document
     root.querySelectorAll('.btn, .sel-tab, .rev-nav button').forEach((b) => {
-      const xt = gsap.quickTo(b, 'x', { duration: 0.6, ease: 'power3.out' })
-      const yt = gsap.quickTo(b, 'y', { duration: 0.6, ease: 'power3.out' })
+      // created on first hover, not up front: a quickTo auto-overwrites any scroll-entrance tween on the same x / y
+      let q = null
+      const get = () => (q ||= [gsap.quickTo(b, 'x', { duration: 0.6, ease: 'power3.out' }), gsap.quickTo(b, 'y', { duration: 0.6, ease: 'power3.out' })])
       on(b, 'pointermove', (e) => {
         const r = b.getBoundingClientRect()
+        const [xt, yt] = get()
         xt((e.clientX - (r.left + r.width / 2)) * 0.3)
         yt((e.clientY - (r.top + r.height / 2)) * 0.4)
       })
       on(b, 'pointerleave', () => {
-        xt(0)
-        yt(0)
+        if (!q) return
+        q[0](0)
+        q[1](0)
       })
+    })
+
+    // press feedback: a quick squeeze on pointer-down, spring back on release (scale only, so it never fights the magnet's x / y)
+    root.querySelectorAll('.btn, .sel-tab, .opt, .card-heart, .ps-qty button').forEach((b) => {
+      on(b, 'pointerdown', () => gsap.to(b, { scale: 0.94, duration: 0.12, ease: 'power2.out' }))
+      const up = () => gsap.to(b, { scale: 1, duration: 0.55, ease: 'elastic.out(1, 0.5)' })
+      on(b, 'pointerup', up)
+      on(b, 'pointerleave', up)
     })
 
     root.querySelectorAll('.card').forEach((card) => {
       const glass = card.querySelector('.glass-box')
-      const rx = gsap.quickTo(card, 'rotationX', { duration: 0.7, ease: 'power3.out' })
-      const ry = gsap.quickTo(card, 'rotationY', { duration: 0.7, ease: 'power3.out' })
-      const gx = gsap.quickTo(glass, 'x', { duration: 0.8, ease: 'power3.out' })
-      const gy = gsap.quickTo(glass, 'y', { duration: 0.8, ease: 'power3.out' })
+      let q = null
+      const get = () => (q ||= [
+        gsap.quickTo(card, 'rotationX', { duration: 0.7, ease: 'power3.out' }), gsap.quickTo(card, 'rotationY', { duration: 0.7, ease: 'power3.out' }),
+        gsap.quickTo(glass, 'x', { duration: 0.8, ease: 'power3.out' }), gsap.quickTo(glass, 'y', { duration: 0.8, ease: 'power3.out' }),
+      ])
       gsap.set(card, { transformPerspective: 900 })
       on(card, 'pointerenter', () => {
         gsap.to(card, { y: -10, duration: 0.7, ease: 'power3.out' })
@@ -116,13 +128,14 @@ export function useMicro(scope) {
         const r = card.getBoundingClientRect()
         const nx = (e.clientX - r.left) / r.width - 0.5
         const ny = (e.clientY - r.top) / r.height - 0.5
+        const [rx, ry, gx, gy] = get()
         ry(nx * 9)
         rx(-ny * 7)
         gx(nx * 14)
         gy(ny * 10)
       })
       on(card, 'pointerleave', () => {
-        rx(0); ry(0); gx(0); gy(0)
+        if (q) q.forEach((f) => f(0))
         gsap.to(card, { y: 0, duration: 0.8, ease: 'power3.out' })
         gsap.to(glass, { scale: 1, duration: 0.9, ease: 'power3.out' })
       })

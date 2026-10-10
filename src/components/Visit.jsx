@@ -5,7 +5,7 @@ export default function Visit() {
   return (
     <section className="section visit" id="visit">
       <div className="wrap visit-grid">
-        <div data-reveal>
+        <div>
           <SectionHead eyebrow="Find us" title={<>Visit <em>LUMA</em></>} />
           <address className="addr">
             {SITE.address.map((l) => (
@@ -32,7 +32,7 @@ export default function Visit() {
         </div>
 
         {/* Placeholder map tile — swap for an embed later */}
-        <div className="map" data-reveal data-delay=".1" role="img" aria-label="Map placeholder">
+        <div className="map" role="img" aria-label="Map placeholder">
           <svg viewBox="0 0 400 320" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
             <rect width="400" height="320" fill="#FBEFE0" />
             <path d="M-20 80C80 60 140 140 230 110S380 40 430 70" stroke="#fff" strokeWidth="26" fill="none" />

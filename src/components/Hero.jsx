@@ -23,14 +23,28 @@ const FINAL = 30
 
 // Frames 13–16: the table strawberries/jelly turn into semi-transparent double exposures, then vanish. 29: blurred transition frame.
 const SKIP = new Set([13, 14, 15, 16, 29])
-const SEQ = Array.from({ length: COUNT }, (_, i) => i + 1).filter((n) => !SKIP.has(n))
-// seconds to dissolve from SEQ[i] to SEQ[i+1]: longer where the source jumps (12→17 gap, 28→30 content change)
-const STEP = SEQ.map((n, i) => (i === SEQ.length - 1 ? 0 : n === 12 ? 0.34 : n === 28 ? 0.5 : n < 12 ? 0.12 : 0.16))
+const SEQ = [0, ...Array.from({ length: COUNT }, (_, i) => i + 1).filter((n) => !SKIP.has(n))] // frame 0: the empty glass (tools/make-empty-frame.mjs)
+/*
+  ONE master clock drives the frames AND the copy, so they cannot drift apart:
+    0.0 – 0.4   navbar + the first, faint part of the headline are already there; the empty glass is on the right
+    0.4 – 3.0   the Falooda forms: empty glass → syrup arrives (slow, easy to read) → layers build up to frame 30
+    0.3 – 1.8   headline: first line brightens, second line rises          2.8 supporting text          3.2 – 3.6 buttons
+    3.6 +       the finished Falooda is held; only ambient motion (glow, particles, slow camera drift, cursor parallax)
+  Formation checkpoints are [source frame, seconds after the formation starts]; the steps in between are spread evenly.
+*/
+const FORM_AT = 0.4
+const END = 3.6
+const CHECK = [[0, 0], [1, 0.55], [5, 1.0], [12, 1.55], [17, 1.8], [23, 2.15], [27, 2.45], [28, 2.53], [30, 2.65]]
+const STEP = SEQ.map((n, i) => {
+  if (i === SEQ.length - 1) return 0
+  const k = CHECK.findIndex(([f]) => f > n) // first checkpoint after this frame
+  const [fb, tb] = CHECK[k]
+  const [fa, ta] = CHECK[k - 1]
+  return (tb - ta) / (SEQ.indexOf(fb) - SEQ.indexOf(fa))
+})
 const T = STEP.reduce((acc, s, i) => (acc.push(i ? acc[i - 1] + STEP[i - 1] : 0), acc), [])
-const DURATION = T[T.length - 1] // time at which the last frame is reached
-const REVEAL_AT = DURATION - 0.9
-// where the glass sits in the 1920×1080 frames (fraction of width) — used to frame it right-of-centre without distortion
-const GLASS_X = 0.61
+const DURATION = T[T.length - 1] // formation length (2.65): the time at which the last frame is reached
+const GLASS_X = 0.61 // the glass is steady in the source frames (measured: centre drift ≤ 2%, almost all of it splash), so one fixed anchor is used
 
 // each ribbon has two outlines with identical commands, so GSAP can morph between them
 const RIBBONS = [
@@ -52,7 +66,8 @@ export default function Hero() {
     const ctx = gsap.context(() => {
       gsap.set('.vh-bgfar, .vh-bgmid, .vh-glow', { opacity: 0 })
       gsap.set('.vh-frames', { opacity: 0 })
-      gsap.set('.vh-word', { yPercent: 125, rotate: 6 })
+      gsap.set('.vh-line:first-child .vh-word', { opacity: 0.22 }) // 0 – 0.5 s: the first part of the headline is already visible, faintly
+      gsap.set('.vh-line:last-child .vh-word', { yPercent: 125, rotate: 6 })
       gsap.set('.vh-sub', { y: 26, opacity: 0 })
       gsap.set('.vh-cta .btn', { y: 30, opacity: 0, scale: 0.94 })
     }, root)
@@ -74,6 +89,7 @@ export default function Hero() {
     const DPR = Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.75)
     const palette = ['255,196,150', '255,159,189', '255,244,227', '169,213,139', '255,190,59']
     const pts = []
+    const zx = () => (mobile ? 0 : 0.4 * W) // particles never enter the left 40%, where the copy sits
     const size = () => {
       const r = el.getBoundingClientRect()
       W = r.width; H = r.height
@@ -83,7 +99,7 @@ export default function Hero() {
     size()
     for (let i = 0; i < PCOUNT; i++) {
       const near = Math.random()
-      pts.push({ x: Math.random() * W, y: Math.random() * H, r: 1 + near * 3.4, z: 0.3 + near, vy: -(0.06 + Math.random() * 0.2) * (0.5 + near), vx: (Math.random() - 0.5) * 0.12, c: palette[(Math.random() * palette.length) | 0], a: 0.2 + near * 0.45, ph: Math.random() * 6.28, ox: 0, oy: 0 })
+      pts.push({ x: zx() + Math.random() * (W - zx()), y: Math.random() * H, r: 1 + near * 3.4, z: 0.3 + near, vy: -(0.06 + Math.random() * 0.2) * (0.5 + near), vx: (Math.random() - 0.5) * 0.12, c: palette[(Math.random() * palette.length) | 0], a: 0.2 + near * 0.45, ph: Math.random() * 6.28, ox: 0, oy: 0 })
     }
     let fade = still ? 1 : 0
     const draw = (t) => {
@@ -94,7 +110,8 @@ export default function Hero() {
       for (const p of pts) {
         p.x += p.vx + Math.sin(t / 2600 + p.ph) * 0.1 * p.z
         p.y += p.vy
-        if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W }
+        if (p.y < -10) { p.y = H + 10; p.x = zx() + Math.random() * (W - zx()) }
+        if (p.x < zx()) p.x += 0.6
         const dx = p.x - mouse.x, dy = p.y - mouse.y
         const d = Math.hypot(dx, dy)
         let tx = 0, ty = 0
@@ -116,15 +133,24 @@ export default function Hero() {
     io.observe(el)
     cleanups.push(() => { cancelAnimationFrame(raf); io.disconnect() })
 
-    /* ---------- copy: logo → headline word-by-word → supporting text → buttons ---------- */
+    /* ---------- copy: driven by the master clock ---------- */
+    let copyTl = null
+    let copyLive = true // false once the fallback has taken over
+    if (!still) {
+      copyTl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } })
+      copyTl
+        .to('.vh-line:first-child .vh-word', { opacity: 1, duration: 0.8 }, 0.35)
+        .to('.vh-line:last-child .vh-word', { yPercent: 0, rotate: 0, duration: 0.9, ease: 'expo.out' }, 0.95)
+        .to('.vh-sub', { y: 0, opacity: 1, duration: 0.5 }, 2.7)
+        .to('.vh-cta .btn', { y: 0, opacity: 1, scale: 1, duration: 0.3, stagger: 0.1 }, 3.1)
+      cleanups.push(() => copyTl.kill())
+    }
+    // if the frames can never play (slow network, blocked), do not leave the page without its headline
     const reveal = () => {
-      if (revealed.current) return
+      if (revealed.current || still || started) return
       revealed.current = true
-      if (still) return
-      gsap.timeline()
-        .to('.vh-word', { yPercent: 0, rotate: 0, duration: 1.25, stagger: 0.16, ease: 'expo.out' }, 0)
-        .to('.vh-sub', { y: 0, opacity: 1, duration: 1, ease: 'power3.out' }, 0.8)
-        .to('.vh-cta .btn', { y: 0, opacity: 1, scale: 1, duration: 0.9, stagger: 0.14, ease: 'power3.out' }, 1.2)
+      copyLive = false
+      copyTl.tweenTo(END, { duration: 1.4, ease: 'none' })
     }
 
     /* ---------- product: frame-sequence player ---------- */
@@ -132,40 +158,44 @@ export default function Hero() {
     const fx = fc.getContext('2d')
     let FW = 0, FH = 0, fdpr = 1
     let geo = null // placement of the 1920×1080 frame inside the canvas (css px)
-    const layout = () => {
-      FW = fc.offsetWidth; FH = fc.offsetHeight // layout size: unaffected by the scroll scale / parallax transforms above it
-      fdpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2)
-      fc.width = Math.round(FW * fdpr); fc.height = Math.round(FH * fdpr)
-      const portrait = FW / FH < 1.1
-      // never stretched: one uniform scale. Desktop fits ~90% of the height, phones fit the glass and crop the sides.
-      const s = (portrait ? 0.94 : 0.86) * (FH / 1080)
-      const frameW = 1920 * s, frameH = 1080 * s
-      const targetX = portrait ? FW / 2 : FW * 0.735
+    const compute = () => {
+      const W_ = fc.offsetWidth, H_ = fc.offsetHeight // layout size: unaffected by the scroll scale / parallax transforms above it
+      const dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2)
+      const portrait = W_ / H_ < 1.1
+      // never stretched: one uniform scale. Desktop fits ~86% of the height, phones fit the glass and crop the sides.
+      const sc = (portrait ? 0.94 : 0.86) * (H_ / 1080)
+      const frameW = 1920 * sc, frameH = 1080 * sc
+      const targetX = portrait ? W_ / 2 : W_ * 0.7 // centre of the right-hand 60%
       let ox = targetX - GLASS_X * frameW
-      if (portrait) ox = frameW >= FW ? Math.min(0, Math.max(FW - frameW, ox)) : Math.min(FW - frameW, Math.max(0, ox))
+      if (portrait) ox = frameW >= W_ ? Math.min(0, Math.max(W_ - frameW, ox)) : Math.min(W_ - frameW, Math.max(0, ox))
       // desktop: the glass keeps its place right of centre even if the frame's right edge runs past the hero (cropped bokeh only)
-      const oy = portrait ? FH * 0.04 : FH - frameH
+      const oy = portrait ? H_ * 0.04 : H_ - frameH
       // the part of the frame that is actually on screen (in source pixels) → decode only that, at output resolution
-      const vx0 = Math.max(0, -ox), vx1 = Math.min(frameW, FW - ox)
-      // soft edges follow the real frame edges (css custom properties used by the mask in CSS), so no photographic rectangle shows
-      fc.style.setProperty('--fx0', ox + 'px'); fc.style.setProperty('--fx1', ox + frameW + 'px'); fc.style.setProperty('--fw', frameW + 'px')
-      fc.style.setProperty('--fy0', oy + 'px'); fc.style.setProperty('--fy1', oy + frameH + 'px'); fc.style.setProperty('--fh', frameH + 'px')
-      fc.style.setProperty('--fb', portrait ? '0.2' : '0.06')
-      geo = { s, ox, oy, sx: Math.floor(vx0 / s), sw: Math.ceil((vx1 - vx0) / s), dx: Math.max(0, ox), dw: vx1 - vx0, dh: frameH }
+      const vx0 = Math.max(0, -ox), vx1 = Math.min(frameW, W_ - ox)
+      return {
+        W_, H_, dpr,
+        vars: { '--fx0': ox + 'px', '--fx1': ox + frameW + 'px', '--fw': frameW + 'px', '--fy0': oy + 'px', '--fy1': oy + frameH + 'px', '--fh': frameH + 'px', '--fb': '0.05', '--ft': portrait ? '0.05' : '0.08', '--hl0': portrait ? '-2%' : '36%', '--hl1': portrait ? '0%' : '51%' },
+        geo: { s: sc, ox, oy, sx: Math.floor(vx0 / sc), sw: Math.ceil((vx1 - vx0) / sc), dx: Math.max(0, ox), dw: vx1 - vx0, dh: frameH },
+      }
     }
+    // commit: resizing a canvas clears it, so this is only ever called together with an immediate repaint
+    const apply = (L) => {
+      FW = L.W_; FH = L.H_; fdpr = L.dpr; geo = L.geo
+      fc.width = Math.round(FW * fdpr); fc.height = Math.round(FH * fdpr)
+      for (const k in L.vars) fc.style.setProperty(k, L.vars[k])
+    }
+    const layout = () => apply(compute())
 
     let blobs = new Map() // frame number → Blob (all fetched up front)
     let cache = new Map() // frame number → ImageBitmap | Promise
     let alive = true, started = false, done = false
     let tPlay = 0, lastNow = 0, prx = 0, manual = false
 
+    const bmFor = (n, g, dpr) => createImageBitmap(blobs.get(n), g.sx, 0, g.sw, 1080, { resizeWidth: Math.max(2, Math.round(g.dw * dpr)), resizeHeight: Math.max(2, Math.round(g.dh * dpr)), resizeQuality: 'high' }).catch(() => null)
     const decode = (n) => {
       if (cache.has(n)) return cache.get(n)
-      const blob = blobs.get(n)
-      if (!blob) return null
-      const pr = createImageBitmap(blob, geo.sx, 0, geo.sw, 1080, { resizeWidth: Math.max(2, Math.round(geo.dw * fdpr)), resizeHeight: Math.max(2, Math.round(geo.dh * fdpr)), resizeQuality: 'high' })
-        .then((bm) => { if (alive && cache.get(n) === pr) cache.set(n, bm); else bm.close(); return bm })
-        .catch(() => null)
+      if (!blobs.get(n)) return null
+      const pr = bmFor(n, geo, fdpr).then((bm) => { if (bm && alive && cache.get(n) === pr) cache.set(n, bm); else if (bm) bm.close(); return bm })
       cache.set(n, pr)
       return pr
     }
@@ -182,8 +212,8 @@ export default function Hero() {
       const a = k === SEQ.length - 1 ? 0 : Math.min(1, (t - T[k]) / STEP[k]) // linear: a constant-rate dissolve reads as motion, not pulsing
       window_(k)
       const A = bitmap(SEQ[k]) || bitmap(SEQ[Math.max(0, k - 1)])
+      if (!A) return false // keep whatever is on screen rather than flashing empty
       fx.clearRect(0, 0, fc.width, fc.height)
-      if (!A) return false
       const dx = geo.dx * fdpr, dy = geo.oy * fdpr, dw = geo.dw * fdpr, dh = geo.dh * fdpr
       fx.globalAlpha = 1
       fx.drawImage(A, dx, dy, dw, dh)
@@ -199,18 +229,19 @@ export default function Hero() {
       lastNow = now
       if (!visible) return
       tPlay += dt
-      const t = Math.min(DURATION, tPlay)
-      paint(t)
-      if (tPlay >= REVEAL_AT) reveal()
-      if (tPlay >= DURATION + 0.2) {
-        done = true // hold the final frame: no loop (a dessert vanishing back to an empty glass looks unnatural)
+      paint(fl())
+      if (copyTl && copyLive) copyTl.time(Math.min(END, tPlay))
+      if (tPlay >= END + 0.1) {
+        done = true // hold the finished state: no loop (a dessert vanishing back to an empty glass looks unnatural)
         paint(DURATION)
+        if (copyTl && copyLive) copyTl.progress(1)
         cancelAnimationFrame(frameRaf)
-        // a very slow "breathing" so the held frame is not dead
-        gsap.to('.vh-breathe', { scale: 1.018, duration: 9, ease: 'sine.inOut', repeat: -1, yoyo: true })
+        // ambient only: a very slow camera drift so the held frame is not dead
+        gsap.to('.vh-breathe', { scale: 1.012, duration: 10, ease: 'sine.inOut', repeat: -1, yoyo: true })
       }
     }
     let frameRaf = 0
+    const fl = () => (done ? DURATION : Math.max(0, Math.min(DURATION, tPlay - FORM_AT))) // formation-local time
     const fetchBlob = (n) => fetch(frameUrl(n)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status))))).then((b) => blobs.set(n, b))
 
     const start = async () => {
@@ -224,15 +255,22 @@ export default function Hero() {
         return
       }
       try {
-        await Promise.all(SEQ.map(fetchBlob)) // preload every frame before starting
+        // frame 0 (the empty glass) goes first, at the front of the queue, so it is on screen almost immediately
+        await fetchBlob(SEQ[0])
+        if (!alive) return
+        await decode(SEQ[0])
+        if (!alive) return
+        paint(0)
+        gsap.to('.vh-frames', { opacity: 1, duration: 0.6, ease: 'power2.out' })
+        // then every other frame is preloaded before the story starts moving
+        await Promise.all(SEQ.slice(1).map(fetchBlob))
         if (!alive) return
         await Promise.all(SEQ.slice(0, 8).map(decode))
         if (!alive) return
         started = true
-        paint(0)
-        gsap.to('.vh-frames', { opacity: 1, duration: 0.8, ease: 'power2.out' })
         lastNow = performance.now()
         frameRaf = requestAnimationFrame(tick)
+        revealed.current = true
       } catch {
         // fallback: the final frame, still
         try {
@@ -245,22 +283,28 @@ export default function Hero() {
     }
     start()
     // never leave the page without its headline if loading is slow
-    const safety = setTimeout(reveal, 9000)
+    const safety = setTimeout(reveal, 12000)
     let lw = window.innerWidth, lh = window.innerHeight
-    const onResize = () => {
+    let resizeToken = 0
+    const onResize = async () => {
       // phones fire resize when the address bar slides: ignore small height changes
       if (window.innerWidth === lw && Math.abs(window.innerHeight - lh) < 140) return
       lw = window.innerWidth; lh = window.innerHeight
       size()
       if (!geo) return
-      layout()
+      const token = ++resizeToken
+      const L = compute()
+      const t = fl()
+      let k = 0
+      while (k < SEQ.length - 1 && T[k + 1] <= t) k++
+      const need = [...new Set([SEQ[k], SEQ[Math.min(SEQ.length - 1, k + 1)], SEQ[SEQ.length - 1]])]
+      const made = await Promise.all(need.map((n) => bmFor(n, L.geo, L.dpr)))
+      if (!alive || token !== resizeToken || made.some((m) => !m)) { made.forEach((m) => m && m.close()); return }
       for (const [, v] of cache) if (v && typeof v.close === 'function') v.close()
       cache = new Map()
-      if (started || still) {
-        const t = done ? DURATION : Math.min(DURATION, tPlay)
-        Promise.all([decode(SEQ[SEQ.length - 1])]).then(() => paint(t))
-        window_(0)
-      }
+      need.forEach((n, i) => cache.set(n, made[i]))
+      apply(L) // clears the canvas…
+      paint(fl()) // …and it is repainted in the same tick, before the browser can show it
     }
     window.addEventListener('resize', onResize)
     cleanups.push(() => { alive = false; clearTimeout(safety); cancelAnimationFrame(frameRaf); window.removeEventListener('resize', onResize); for (const [, v] of cache) if (v && typeof v.close === 'function') v.close(); cache = new Map(); blobs = new Map() })
@@ -318,14 +362,16 @@ export default function Hero() {
     }
     void prx
     if (import.meta.env.DEV) window.__hero = {
-        get t() { return tPlay }, get done() { return done }, get decoded() { return [...cache.values()].filter((v) => v && typeof v.close === "function").length }, duration: DURATION, seq: SEQ, skip: [...SKIP], steps: STEP,
+        get t() { return tPlay }, get done() { return done }, get decoded() { return [...cache.values()].filter((v) => v && typeof v.close === "function").length }, duration: DURATION, end: END, formAt: FORM_AT, seq: SEQ, skip: [...SKIP], steps: STEP,
         // deterministic rendering for verification: pause the clock, decode what is needed, paint exactly time t
         seek: async (t) => {
           manual = true
           let k = 0
-          while (k < SEQ.length - 1 && T[k + 1] <= t) k++
+          const f = Math.max(0, Math.min(DURATION, t - FORM_AT))
+          while (k < SEQ.length - 1 && T[k + 1] <= f) k++
           await Promise.all([decode(SEQ[k]), decode(SEQ[Math.min(SEQ.length - 1, k + 1)])])
-          return paint(t)
+          if (copyTl) copyTl.time(Math.min(END, t))
+          return paint(f)
         },
       }
     return () => cleanups.forEach((f) => f())
@@ -377,7 +423,7 @@ export default function Hero() {
           <p className="vh-sub">Creamy. Colourful. Refreshingly unforgettable.</p>
           <div className="vh-cta">
             <a className="btn btn-rose" href="#flavours">
-              Explore Faloodas
+              Explore Flavours
               <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </a>
             <a className="btn btn-glass" href={SITE.contact.orderHref}>Order Now</a>
