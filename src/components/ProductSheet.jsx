@@ -25,7 +25,7 @@ export function burst(btn) {
 }
 
 /* Product detail / order sheet. Opens over the page, closes with Esc, the backdrop or the close button. */
-export default function ProductSheet({ f, onClose, onCustomise }) {
+export default function ProductSheet({ f, onClose }) {
   const root = useRef(null)
   const [qty, setQty] = useState(1)
   const [added, setAdded] = useState(false)
@@ -109,7 +109,6 @@ export default function ProductSheet({ f, onClose, onCustomise }) {
             </button>
             <button className="card-heart ps-heart" aria-pressed={wished} aria-label={wished ? 'Remove from wishlist' : 'Save to wishlist'} onClick={heart}><Heart /></button>
           </div>
-          <button className="ps-link" onClick={() => onCustomise(f.id)}>Customise it in the builder →</button>
         </div>
       </div>
     </div>

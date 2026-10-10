@@ -16,11 +16,11 @@ export default function App() {
   // sprite assets for the flavour sections are decoded in the background
   useEffect(() => { preloadAssets() }, [])
 
-  // mount the rest of the page once the hero is under way (idle), or immediately if the visitor interacts / follows an anchor
+  // mount the rest of the page once the hero opening has played (idle, ~4.5 s: the opening must not compete with it for the main thread), or immediately if the visitor interacts / follows an anchor
   useEffect(() => {
     if (below) return
     const open = () => setBelow(true)
-    const idle = window.requestIdleCallback ? window.requestIdleCallback(open, { timeout: 2500 }) : setTimeout(open, 1500)
+    const idle = window.requestIdleCallback ? window.requestIdleCallback(open, { timeout: 4500 }) : setTimeout(open, 4500)
     const first = ['scroll', 'wheel', 'touchstart', 'keydown', 'pointerdown']
     first.forEach((e) => window.addEventListener(e, open, { once: true, passive: true }))
     return () => {

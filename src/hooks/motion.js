@@ -87,7 +87,7 @@ export function useMicro(scope) {
     }
 
     const root = scope?.current || document
-    root.querySelectorAll('.btn, .sel-tab, .rev-nav button').forEach((b) => {
+    root.querySelectorAll('.btn, .rev-nav button').forEach((b) => {
       // created on first hover, not up front: a quickTo auto-overwrites any scroll-entrance tween on the same x / y
       let q = null
       const get = () => (q ||= [gsap.quickTo(b, 'x', { duration: 0.6, ease: 'power3.out' }), gsap.quickTo(b, 'y', { duration: 0.6, ease: 'power3.out' })])
@@ -105,7 +105,7 @@ export function useMicro(scope) {
     })
 
     // press feedback: a quick squeeze on pointer-down, spring back on release (scale only, so it never fights the magnet's x / y)
-    root.querySelectorAll('.btn, .sel-tab, .opt, .card-heart, .ps-qty button').forEach((b) => {
+    root.querySelectorAll('.btn, .sel-tab, .card-heart, .ps-qty button').forEach((b) => {
       on(b, 'pointerdown', () => gsap.to(b, { scale: 0.94, duration: 0.12, ease: 'power2.out' }))
       const up = () => gsap.to(b, { scale: 1, duration: 0.55, ease: 'elastic.out(1, 0.5)' })
       on(b, 'pointerup', up)

@@ -22,19 +22,22 @@ const COUNT = 30
 const FINAL = 30
 
 // Frames 13–16: the table strawberries/jelly turn into semi-transparent double exposures, then vanish. 29: blurred transition frame.
-const SKIP = new Set([13, 14, 15, 16, 29])
+// 11, 12 and 17: the milk-crown peaks of the pour — left out so the splash stays controlled (the dissolve from 10 to 18 carries it through).
+const SKIP = new Set([11, 12, 13, 14, 15, 16, 17, 29])
 const SEQ = [0, ...Array.from({ length: COUNT }, (_, i) => i + 1).filter((n) => !SKIP.has(n))] // frame 0: the empty glass (tools/make-empty-frame.mjs)
 /*
-  ONE master clock drives the frames AND the copy, so they cannot drift apart:
-    0.0 – 0.4   navbar + the first, faint part of the headline are already there; the empty glass is on the right
-    0.4 – 3.0   the Falooda forms: empty glass → syrup arrives (slow, easy to read) → layers build up to frame 30
-    0.3 – 1.8   headline: first line brightens, second line rises          2.8 supporting text          3.2 – 3.6 buttons
-    3.6 +       the finished Falooda is held; only ambient motion (glow, particles, slow camera drift, cursor parallax)
+  Opening = ONE master clock that drives the frames, the ingredient layers, the zoom and the copy, so they cannot drift apart:
+    0.0 – 0.5   empty glass, a slow cinematic zoom-out from 1.15 (phones 1.05) to 1.0 starts; background already moving; no text, logo or buttons
+    0.5 – 1.5   syrup, then milk fill the glass; strawberries, jelly, seeds and droplets travel in from outside the frame
+    1.5 – 2.2   basil seeds, sev and jelly settle, milk and syrup keep swirling
+    2.2 – 2.8   the ice cream scoop lands, toppings settle
+    2.5 logo · 2.65 eyebrow · 2.8 – 3.3 headline · 3.3 – 3.6 supporting text · 3.6 – 4.0 buttons · 3.7 navigation
+    4.3 +       the finished Falooda is held; only ambient motion continues (glow, bokeh, particles, slow camera drift, cursor parallax)
   Formation checkpoints are [source frame, seconds after the formation starts]; the steps in between are spread evenly.
 */
-const FORM_AT = 0.4
-const END = 3.6
-const CHECK = [[0, 0], [1, 0.55], [5, 1.0], [12, 1.55], [17, 1.8], [23, 2.15], [27, 2.45], [28, 2.53], [30, 2.65]]
+const FORM_AT = 0.5
+const END = 4.3
+const CHECK = [[0, 0], [1, 0.2], [5, 0.45], [10, 0.9], [18, 1.45], [20, 1.7], [26, 2.1], [28, 2.2], [30, 2.3]]
 const STEP = SEQ.map((n, i) => {
   if (i === SEQ.length - 1) return 0
   const k = CHECK.findIndex(([f]) => f > n) // first checkpoint after this frame
@@ -43,8 +46,29 @@ const STEP = SEQ.map((n, i) => {
   return (tb - ta) / (SEQ.indexOf(fb) - SEQ.indexOf(fa))
 })
 const T = STEP.reduce((acc, s, i) => (acc.push(i ? acc[i - 1] + STEP[i - 1] : 0), acc), [])
-const DURATION = T[T.length - 1] // formation length (2.65): the time at which the last frame is reached
+const DURATION = T[T.length - 1] // formation length (2.3): the time at which the last frame is reached
 const GLASS_X = 0.61 // the glass is steady in the source frames (measured: centre drift ≤ 2%, almost all of it splash), so one fixed anchor is used
+
+/*
+  Ingredient layers that travel from outside the glass into it. Real photographic cut-outs (strawberries, jelly, droplets: tools/make-ingredient-cutouts.mjs)
+  and a few small CSS ones (seeds, pistachio). x,y = where it meets the glass; fx,fy = where it starts, relative to that (fractions of the 1920×1080 frame,
+  so most start above the top edge or beyond the sides, i.e. outside); t = start, d = travel time; then it carries on by ex,ey while fading and shrinking
+  (e = duration, sc = end scale): dropping into the drink / blending into the toppings. 'fall' items accelerate downward, the rest glide in. m = kept on phones.
+*/
+const rnd = (a, b, i) => a + (((i * 37) % 100) / 100) * (b - a)
+const INGS = [
+  { img: 'straw-half', s: 0.105, x: 0.568, y: 0.285, fx: -0.36, fy: -0.5, t: 0.25, d: 1.35, ex: 0.004, ey: 0.02, e: 0.4, sc: 0.85, r0: -50, r1: 8, m: 1 },
+  { img: 'straw-whole', s: 0.115, x: 0.66, y: 0.29, fx: 0.32, fy: -0.5, t: 0.35, d: 1.3, ex: -0.004, ey: 0.02, e: 0.4, sc: 0.85, r0: 40, r1: -6, m: 1 },
+  { img: 'jelly-a', s: 0.06, x: 0.597, y: 0.34, fx: -0.1, fy: -0.55, t: 0.45, d: 0.85, ex: -0.01, ey: 0.2, e: 0.4, sc: 0.6, r0: -70, r1: 15, fall: 1, m: 1 },
+  { img: 'jelly-b', s: 0.068, x: 0.63, y: 0.345, fx: 0.12, fy: -0.58, t: 0.6, d: 0.85, ex: 0.01, ey: 0.2, e: 0.4, sc: 0.6, r0: 80, r1: -10, fall: 1, m: 0 },
+  { img: 'jelly-a', s: 0.052, x: 0.612, y: 0.32, fx: 0, fy: -0.6, t: 0.75, d: 0.8, ex: 0, ey: 0.2, e: 0.4, sc: 0.6, r0: 30, r1: -20, fall: 1, m: 1 },
+  ...Array.from({ length: 6 }, (_, i) => ({ seed: 1, s: 0.011, x: rnd(0.565, 0.66, i + 3), y: 0.33, fx: rnd(-0.08, 0.08, i + 1), fy: -0.5 - (i % 3) * 0.05, t: 0.5 + i * 0.1, d: 0.7, ex: 0, ey: 0.17, e: 0.4, sc: 0.7, r0: 0, r1: 90, fall: 1, m: i % 2 === 0 })),
+  ...[[0.6, 0.235, -0.1, 1.85], [0.632, 0.215, 0.11, 1.95], [0.618, 0.255, 0, 2.05]].map(([x, y, fx, t], i) => ({ pist: 1, s: 0.016, x, y, fx, fy: -0.5, t, d: 0.45, ex: 0, ey: 0.02, e: 0.2, sc: 0.85, r0: -80, r1: 10 + i * 20, fall: 1, m: i !== 1 })),
+  { img: 'drop-a', s: 0.03, x: 0.532, y: 0.45, fx: -0.32, fy: -0.12, t: 0.3, d: 0.9, ex: 0.012, ey: 0.01, e: 0.3, sc: 0.35, r0: 0, r1: 0, m: 1 },
+  { img: 'drop-b', s: 0.034, x: 0.695, y: 0.5, fx: 0.32, fy: 0, t: 0.4, d: 0.9, ex: -0.012, ey: 0.01, e: 0.3, sc: 0.35, r0: 0, r1: 0, m: 1 },
+  { img: 'drop-c', s: 0.02, x: 0.53, y: 0.6, fx: -0.3, fy: 0.05, t: 0.6, d: 0.85, ex: 0.012, ey: 0.01, e: 0.3, sc: 0.35, r0: 0, r1: 0, m: 0 },
+  ...Array.from({ length: 3 }, (_, i) => ({ drop: 1, s: 0.011 + i * 0.004, x: i % 2 ? 0.7 : 0.53, y: 0.42 + i * 0.07, fx: i % 2 ? 0.28 : -0.28, fy: rnd(-0.2, 0.05, i + 2), t: 0.5 + i * 0.1, d: 0.8, ex: i % 2 ? -0.015 : 0.015, ey: 0.01, e: 0.3, sc: 0.3, r0: 0, r1: 0, m: i !== 1 })),
+]
 
 // each ribbon has two outlines with identical commands, so GSAP can morph between them
 const RIBBONS = [
@@ -66,8 +90,9 @@ export default function Hero() {
     const ctx = gsap.context(() => {
       gsap.set('.vh-bgfar, .vh-bgmid, .vh-glow', { opacity: 0 })
       gsap.set('.vh-frames', { opacity: 0 })
-      gsap.set('.vh-line:first-child .vh-word', { opacity: 0.22 }) // 0 – 0.5 s: the first part of the headline is already visible, faintly
-      gsap.set('.vh-line:last-child .vh-word', { yPercent: 125, rotate: 6 })
+      gsap.set('.vh-line .vh-word', { yPercent: 125, rotate: 6 }) // nothing of the copy is visible until the glass is assembled
+      gsap.set('.vh-eyebrow', { y: 14, opacity: 0 })
+      gsap.set(document.querySelectorAll('.nav .logo, .nav-links, .nav-end'), { opacity: 0, y: -10 }) // the navbar belongs to the reveal too
       gsap.set('.vh-sub', { y: 26, opacity: 0 })
       gsap.set('.vh-cta .btn', { y: 30, opacity: 0, scale: 0.94 })
     }, root)
@@ -138,11 +163,15 @@ export default function Hero() {
     let copyLive = true // false once the fallback has taken over
     if (!still) {
       copyTl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } })
+      const navLogo = document.querySelectorAll('.nav .logo'), navRest = document.querySelectorAll('.nav-links, .nav-end')
       copyTl
-        .to('.vh-line:first-child .vh-word', { opacity: 1, duration: 0.8 }, 0.35)
-        .to('.vh-line:last-child .vh-word', { yPercent: 0, rotate: 0, duration: 0.9, ease: 'expo.out' }, 0.95)
-        .to('.vh-sub', { y: 0, opacity: 1, duration: 0.5 }, 2.7)
-        .to('.vh-cta .btn', { y: 0, opacity: 1, scale: 1, duration: 0.3, stagger: 0.1 }, 3.1)
+        .fromTo('.vh-breathe', { scale: mobile ? 1.05 : 1.15 }, { scale: 1, duration: 1.8, ease: 'power3.out' }, 0)
+        .to(navLogo, { opacity: 1, y: 0, duration: 0.6 }, 2.5)
+        .to('.vh-eyebrow', { y: 0, opacity: 1, duration: 0.6 }, 2.65)
+        .to('.vh-line .vh-word', { yPercent: 0, rotate: 0, duration: 0.7, ease: 'expo.out', stagger: 0.1 }, 2.8)
+        .to('.vh-sub', { y: 0, opacity: 1, duration: 0.5 }, 3.3)
+        .to('.vh-cta .btn', { y: 0, opacity: 1, scale: 1, duration: 0.45, stagger: 0.1 }, 3.6)
+        .to(navRest, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08 }, 3.7)
       cleanups.push(() => copyTl.kill())
     }
     // if the frames can never play (slow network, blocked), do not leave the page without its headline
@@ -150,6 +179,7 @@ export default function Hero() {
       if (revealed.current || still || started) return
       revealed.current = true
       copyLive = false
+      gsap.set('.vh-ings', { display: 'none' }) // no product to feed: the ingredient layers would fly into nothing
       copyTl.tweenTo(END, { duration: 1.4, ease: 'none' })
     }
 
@@ -182,7 +212,9 @@ export default function Hero() {
     const apply = (L) => {
       FW = L.W_; FH = L.H_; fdpr = L.dpr; geo = L.geo
       fc.width = Math.round(FW * fdpr); fc.height = Math.round(FH * fdpr)
-      for (const k in L.vars) fc.style.setProperty(k, L.vars[k])
+      for (const k in L.vars) fc.parentElement.style.setProperty(k, L.vars[k])
+      // the intro zoom pivots on the glass itself, so the product settles in place instead of drifting
+      fc.parentElement.style.transformOrigin = `${L.geo.ox + GLASS_X * 1920 * L.geo.s}px ${L.geo.oy + 1080 * L.geo.s * 0.6}px`
     }
     const layout = () => apply(compute())
 
@@ -221,6 +253,20 @@ export default function Hero() {
       if (B) { fx.globalAlpha = a; fx.drawImage(B, dx, dy, dw, dh); fx.globalAlpha = 1 }
       return true
     }
+    let introBuilt = false
+    const buildIntro = () => {
+      if (introBuilt || !copyTl || !geo) return
+      introBuilt = true
+      const FW_ = () => geo.s * 1920, FH_ = () => geo.s * 1080
+      el.querySelectorAll('.vh-ing').forEach((node) => {
+        const d = INGS[+node.dataset.i]
+        copyTl
+          .fromTo(node, { opacity: 0 }, { opacity: 1, duration: Math.min(0.25, d.d * 0.3), ease: 'power1.out' }, d.t)
+          .fromTo(node, { x: () => d.fx * FW_(), rotate: d.r0 }, { x: 0, rotate: d.r1, duration: d.d, ease: 'power1.inOut' }, d.t)
+          .fromTo(node, { y: () => d.fy * FH_() }, { y: 0, duration: d.d, ease: d.fall ? 'power2.in' : 'power2.inOut' }, d.t)
+          .to(node, { x: () => d.ex * FW_(), y: () => d.ey * FH_(), scale: d.sc, opacity: 0, duration: d.e, ease: 'power1.in' }, d.t + d.d)
+      })
+    }
     const tick = (now) => {
       if (!alive) return
       frameRaf = requestAnimationFrame(tick)
@@ -232,6 +278,7 @@ export default function Hero() {
       paint(fl())
       if (copyTl && copyLive) copyTl.time(Math.min(END, tPlay))
       if (tPlay >= END + 0.1) {
+        if (!paint(DURATION)) return // wait until the last frame is decoded
         done = true // hold the finished state: no loop (a dessert vanishing back to an empty glass looks unnatural)
         paint(DURATION)
         if (copyTl && copyLive) copyTl.progress(1)
@@ -246,6 +293,7 @@ export default function Hero() {
 
     const start = async () => {
       layout()
+      if (!still) buildIntro()
       if (still) {
         // reduced motion / fallback: just the final frame, as a static image
         await fetchBlob(FINAL)
@@ -261,7 +309,7 @@ export default function Hero() {
         await decode(SEQ[0])
         if (!alive) return
         paint(0)
-        gsap.to('.vh-frames', { opacity: 1, duration: 0.6, ease: 'power2.out' })
+        gsap.to('.vh-frames', { opacity: 1, duration: 0.45, ease: 'power2.out' })
         // then every other frame is preloaded before the story starts moving
         await Promise.all(SEQ.slice(1).map(fetchBlob))
         if (!alive) return
@@ -284,6 +332,9 @@ export default function Hero() {
     start()
     // never leave the page without its headline if loading is slow
     const safety = setTimeout(reveal, 12000)
+    const skipIntro = () => { if (window.scrollY > 60 && !done) tPlay = Math.max(tPlay, END + 0.1) }
+    window.addEventListener('scroll', skipIntro, { passive: true })
+    cleanups.push(() => window.removeEventListener('scroll', skipIntro))
     let lw = window.innerWidth, lh = window.innerHeight
     let resizeToken = 0
     const onResize = async () => {
@@ -402,6 +453,13 @@ export default function Hero() {
           <div className="vh-scale">
             <div className="vh-breathe">
               <canvas className="vh-frames" ref={frames} />
+              <div className="vh-ings" aria-hidden="true">
+                {INGS.map((d, i) => (!still && (d.m || window.innerWidth >= 900) ? (
+                  <div className={`vh-ing${d.img ? ' ph' : ''}`} data-i={i} key={i} style={{ left: `${d.x * 100}%`, top: `${d.y * 100}%`, '--s': d.s }}>
+                    {d.img ? <img src={`${BASE}assets/hero-ing/${d.img}.png`} alt="" draggable="false" /> : <i className={d.seed ? 'vh-seed' : d.pist ? 'vh-pist' : 'vh-drop'} />}
+                  </div>
+                ) : null))}
+              </div>
             </div>
           </div>
         </div>
@@ -411,6 +469,7 @@ export default function Hero() {
 
       <div className="wrap vh-grid">
         <div className="vh-copy">
+          <p className="vh-eyebrow">Falooda · Milkshakes · Dessert drinks</p>
           <h1 aria-label="Layers of Happiness.">
             <span className="vh-line" aria-hidden="true">
               <span className="vh-mask"><span className="vh-word">Layers</span></span>{' '}

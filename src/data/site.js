@@ -10,7 +10,7 @@ export const SITE = {
     phoneHref: '#contact',
     email: '[hello@yourdomain]',
     instagramHref: '#',
-    orderHref: '#build',
+    orderHref: '#flavours',
     directionsHref: '#',
   },
   address: ['[Street address line 1]', '[Area, City, Postcode]'],
@@ -19,58 +19,6 @@ export const SITE = {
     ['Friday – Saturday', '[00:00] – [00:00]'],
     ['Sunday', '[00:00] – [00:00]'],
   ],
-}
-
-/*
-  Palette per flavour. Used by <FaloodaGlass/> — the glass re-colours itself (and transitions) from these.
-  syrup: [top, bottom]   milk: [top, bottom]   scoops: 3 × [highlight, shade]   fruit: chunk colour
-  jelly: 3 cube colours
-*/
-const VANILLA = ['#FFF7EA', '#F4DDC2']
-
-export const PALETTES = {
-  rose: {
-    syrup: ['#EE6593', '#B72B5E'],
-    milk: ['#FFEEF3', '#FBCADA'],
-    scoops: [VANILLA, ['#FFD6E3', '#F0A0BC'], VANILLA],
-    fruit: '#FF5A78',
-    jelly: ['#FF86AB', '#A5D98F', '#FFD35F'],
-  },
-  mango: {
-    syrup: ['#FFBC2B', '#EE8A00'],
-    milk: ['#FFF6DB', '#FFE29E'],
-    scoops: [['#FFE08A', '#FFBC3B'], VANILLA, ['#FFD66F', '#FFB52E']],
-    fruit: '#FFAE1A',
-    jelly: ['#FFD35F', '#A5D98F', '#FF9A5C'],
-  },
-  pistachio: {
-    syrup: ['#97CC7B', '#5E9E4E'],
-    milk: ['#F4FAE8', '#D8ECBC'],
-    scoops: [['#CBE8AB', '#9BCB78'], VANILLA, ['#C3E3A1', '#93C46E']],
-    fruit: '#FFC247',
-    jelly: ['#A5D98F', '#FF86AB', '#FFD35F'],
-  },
-  chocolate: {
-    syrup: ['#7A4533', '#3F1D17'],
-    milk: ['#F6E4D4', '#DDB496'],
-    scoops: [['#A3705A', '#6B3F2F'], VANILLA, ['#94644F', '#5E3628']],
-    fruit: '#FF6A82',
-    jelly: ['#FF86AB', '#FFD35F', '#A5D98F'],
-  },
-  dryfruit: {
-    syrup: ['#EBA93F', '#B9701F'],
-    milk: ['#FFF3DC', '#F5D7A4'],
-    scoops: [['#FFE6B0', '#F2C673'], VANILLA, ['#FFEBC0', '#EFC06A']],
-    fruit: '#E9B25A',
-    jelly: ['#FFD35F', '#FF86AB', '#A5D98F'],
-  },
-  strawberry: {
-    syrup: ['#FF5676', '#CF2149'],
-    milk: ['#FFE6EB', '#FFBCCB'],
-    scoops: [['#FFCCD8', '#FF93AB'], VANILLA, ['#FFC2D0', '#FF8CA6']],
-    fruit: '#FF5A78',
-    jelly: ['#FF86AB', '#A5D98F', '#FFD35F'],
-  },
 }
 
 export const FLAVOURS = [
@@ -156,6 +104,15 @@ export const SELECTOR = {
     ink: '#4A1942',
     accent: '#E8325A',
   },
+  dryfruit: {
+    label: 'Dry Fruit',
+    title: 'Royal Dry Fruit',
+    line: 'Almonds, cashews and pistachio folded into kesar-kissed layers.',
+    notes: ['Almonds & cashews', 'Pistachio', 'Kesar milk'],
+    bg: '#F6E3C5',
+    ink: '#4A2A10',
+    accent: '#D9A441',
+  },
   chocolate: {
     label: 'Chocolate',
     title: 'Dark Cocoa',
@@ -165,35 +122,6 @@ export const SELECTOR = {
     ink: '#FFEFE2',
     accent: '#B9774F',
   },
-}
-
-export const BUILDER = {
-  bases: [
-    { id: 'rose', label: 'Rose', price: 149, dot: '#EE6593' },
-    { id: 'mango', label: 'Mango', price: 159, dot: '#FFB52E' },
-    { id: 'chocolate', label: 'Chocolate', price: 159, dot: '#6B3A2B' },
-    { id: 'pistachio', label: 'Pistachio', price: 169, dot: '#97CC7B' },
-  ],
-  ice: [
-    { id: 'vanilla', label: 'Vanilla Bean', price: 30, colors: VANILLA },
-    { id: 'kulfi', label: 'Malai Kulfi', price: 40, colors: ['#FFF0CC', '#F2D7A0'] },
-    { id: 'strawberry', label: 'Strawberry', price: 35, colors: ['#FFCCD8', '#FF93AB'] },
-    { id: 'chocolate', label: 'Dark Chocolate', price: 40, colors: ['#A3705A', '#6B3F2F'] },
-  ],
-  toppings: [
-    { id: 'pistachio', label: 'Pistachios', price: 15 },
-    { id: 'almond', label: 'Almonds', price: 15 },
-    { id: 'petals', label: 'Rose petals', price: 10 },
-    { id: 'fruit', label: 'Fruit pieces', price: 20 },
-    { id: 'jelly', label: 'Jelly cubes', price: 15 },
-    { id: 'basil', label: 'Basil seeds', price: 10 },
-  ],
-  extras: [
-    { id: 'extraSev', label: 'Extra falooda sev', price: 20 },
-    { id: 'cream', label: 'Whipped cream', price: 20 },
-    { id: 'saffron', label: 'Saffron strands', price: 25 },
-    { id: 'cherry', label: 'Cherry on top', price: 10 },
-  ],
 }
 
 export const REVIEWS = [

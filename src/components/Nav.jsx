@@ -30,6 +30,11 @@ export default function Nav() {
     if (n > prevN.current && badge.current && !prefersReduced()) gsap.fromTo(badge.current, { scale: 1.9 }, { scale: 1, duration: 0.8, ease: 'elastic.out(1.2, 0.45)' })
     prevN.current = n
   }, [n])
+  useEffect(() => { // the footer's Cart link
+    const open = () => setCart(true)
+    window.addEventListener('luma:cart', open)
+    return () => window.removeEventListener('luma:cart', open)
+  }, [])
   useEffect(() => {
     if (!cart) return
     if (panel.current && !prefersReduced()) gsap.fromTo(panel.current, { y: -12, scale: 0.94, opacity: 0, transformOrigin: '100% 0%' }, { y: 0, scale: 1, opacity: 1, duration: 0.5, ease: 'expo.out' })
@@ -48,7 +53,7 @@ export default function Nav() {
 
   useEffect(() => {
     let raf = 0
-    const SECTIONS = ['#mood', '#build', '#visit']
+    const SECTIONS = ['#mood', '#visit']
     const on = () => {
       const y = window.scrollY
       setScrolled(y > 24)
@@ -83,7 +88,6 @@ export default function Nav() {
         <Logo />
         <nav className="nav-links" aria-label="Primary" ref={links}>
           <a href="#mood">Flavours</a>
-          <a href="#build">Build Yours</a>
           <a href="#visit">Visit</a>
           <span className="nav-ind" ref={ind} aria-hidden="true" />
         </nav>

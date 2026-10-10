@@ -3,96 +3,155 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import PhotoGlass from './PhotoGlass'
 import { ING } from './Ingredients'
-import { SELECTOR } from '../data/site'
+import { FLAVOURS, SELECTOR, SITE } from '../data/site'
 import { finePointer, prefersReduced } from '../hooks/motion'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const ORDER = ['rose', 'strawberry', 'mango', 'pistachio', 'chocolate']
+const ORDER = ['strawberry', 'rose', 'mango', 'pistachio', 'chocolate', 'dryfruit']
 // the two ingredients floating beside the glass belong to the flavour and are swapped (scale/spin out → in) when it changes
 const Mango = () => <ING.cube color="#FFC247" />
-const FLOATERS = { rose: [ING.petal, ING.berry], strawberry: [ING.berry, ING.jelly], mango: [Mango, ING.almond], pistachio: [ING.pistachio, ING.basil], chocolate: [ING.almond, ING.cherry] }
+const FLOATERS = { rose: [ING.petal, ING.berry], strawberry: [ING.berry, ING.jelly], mango: [Mango, ING.almond], pistachio: [ING.pistachio, ING.basil], chocolate: [ING.almond, ING.cherry], dryfruit: [ING.almond, ING.pistachio] }
 const PARTICLES = Array.from({ length: 16 }, (_, i) => i)
+const AUTO_HOLD = 2000 // each product is held this long (after its transition) before the next one comes in
+const PICK_HOLD = 2500 // …and a product the visitor picked is held a little longer
 
 /*
-  Flavour change = a short choreography:
-    out : title slides away, glass turns edge-on while its layers drain
-    in  : a circle of the new tone expands from the glass, glass turns back and re-pours in the new colours,
-          title/words slide in, a burst of ingredient particles flies out
+  Flavour change = one choreography, ~0.7 s, everything moving together:
+    0 – 0.2   out: words slide away, notes / price fade up and out, the glass tips edge-on and scales down, floaters spin away;
+              at the same moment a circle of the new tone starts to grow from the glass (background accent)
+    0.2 – 0.7 in: new words rise through their masks, the glass turns back and scales into place, new floaters spin in,
+              a burst of particles, notes + price + button follow; the tab indicator has already slid to the new flavour
+  Clicks that arrive mid-transition are queued (never dropped, never stacked). The section also cycles by itself while it is on screen:
+  2 s per product, 2.5 s after a click, paused when it leaves the viewport or the tab is hidden.
 */
 export default function FlavourSelector() {
-  const [id, setId] = useState('rose')
+  const [id, setId] = useState(ORDER[0]) // what the showcase is displaying
+  const [active, setActive] = useState(ORDER[0]) // what the selector shows as chosen (moves first)
   const f = SELECTOR[id]
+  const price = FLAVOURS.find((x) => x.id === id)?.price
   const [FA, FB] = FLOATERS[id]
   const root = useRef(null)
   const wash = useRef(null)
+  const tabs = useRef(null)
+  const ind = useRef(null)
   const busy = useRef(false)
-  const first = useRef(true)
+  const prevId = useRef(ORDER[0])
+  const seen = useRef(false)
+  const idRef = useRef(ORDER[0])
+  const pending = useRef(null)
+  const timer = useRef(0)
+  const holdFor = useRef(AUTO_HOLD)
+  const inView = useRef(false)
+  const api = useRef({})
 
-  const pick = (k) => {
-    if (k === id || busy.current) return
+  /* ---------- tab indicator ---------- */
+  const moveInd = (k, instant) => {
+    const t = tabs.current?.querySelector(`[data-k="${k}"]`)
+    if (!t || !ind.current) return
+    const vars = { x: t.offsetLeft, y: t.offsetTop + t.offsetHeight - 4, scaleX: t.offsetWidth / 100, opacity: 1 }
+    if (instant || prefersReduced()) gsap.set(ind.current, vars)
+    else gsap.to(ind.current, { ...vars, duration: 0.5, ease: 'power3.out', overwrite: true })
+    const c = tabs.current // phones: the row scrolls sideways, keep the active tab in view
+    if (c.scrollWidth > c.clientWidth + 2) c.scrollTo({ left: t.offsetLeft - (c.clientWidth - t.offsetWidth) / 2, behavior: instant ? 'auto' : 'smooth' })
+  }
+  useLayoutEffect(() => {
+    moveInd(active, true)
+    const re = () => moveInd(idRef.current, true)
+    window.addEventListener('resize', re)
+    document.fonts?.ready.then(re)
+    return () => window.removeEventListener('resize', re)
+  }, [])
+
+  /* ---------- transition + auto-cycle ---------- */
+  const hold = (ms) => {
+    clearTimeout(timer.current)
+    if (prefersReduced() || !inView.current || document.hidden) return
+    timer.current = setTimeout(() => api.current.next(), ms)
+  }
+  const go = (k, ms) => {
+    clearTimeout(timer.current) // a click (or the cycle itself) always stops the pending timer first
+    if (busy.current) { pending.current = [k, ms]; return } // mid-transition: the latest click wins, and it is played as soon as this one lands
+    if (k === idRef.current) { moveInd(k); setActive(k); hold(ms); return }
+    setActive(k)
+    moveInd(k)
+    holdFor.current = ms
     if (prefersReduced()) {
       root.current.style.setProperty('--sel-bg', SELECTOR[k].bg)
+      idRef.current = k
       setId(k)
       return
     }
     busy.current = true
     const el = root.current
-    gsap
-      .timeline({ onComplete: () => setId(k) })
-      .to(el.querySelectorAll('.sel-w'), { yPercent: -115, duration: 0.5, stagger: 0.05, ease: 'power3.in' }, 0)
-      .to(el.querySelectorAll('.sel-sub'), { y: -24, opacity: 0, duration: 0.4, stagger: 0.04, ease: 'power2.in' }, 0)
-      .to(el.querySelectorAll('.sel-fl-m'), { scale: 0, rotate: 120, opacity: 0, duration: 0.45, stagger: 0.06, ease: 'power2.in' }, 0)
-      .to(el.querySelector('.sel-turn'), { rotationY: -75, scale: 0.92, duration: 0.5, ease: 'power2.in', transformPerspective: 1100 }, 0)
-  }
-
-  useEffect(() => {
-    if (first.current) {
-      first.current = false
-      return
-    }
-    const el = root.current
-    if (prefersReduced()) return
+    // background accent: a circle of the new tone grows from the glass while the old content leaves
     const vis = el.querySelector('.sel-visual').getBoundingClientRect()
     const sec = el.getBoundingClientRect()
-    const cx = vis.left + vis.width / 2 - sec.left
-    const cy = vis.top + vis.height / 2 - sec.top
+    const cx = vis.left + vis.width / 2 - sec.left, cy = vis.top + vis.height / 2 - sec.top
     const R = Math.hypot(Math.max(cx, sec.width - cx), Math.max(cy, sec.height - cy)) + 40
-
     const w = wash.current
     gsap.killTweensOf(w)
-    w.style.background = f.bg
-    const tl = gsap.timeline({ onComplete: () => (busy.current = false) })
-    tl.fromTo(
-      w,
-      { clipPath: `circle(0px at ${cx}px ${cy}px)` },
-      {
-        clipPath: `circle(${R}px at ${cx}px ${cy}px)`, duration: 1.3, ease: 'power3.inOut',
-        onComplete: () => {
-          el.style.setProperty('--sel-bg', f.bg)
-          gsap.set(w, { clipPath: `circle(0px at ${cx}px ${cy}px)` })
-        },
+    w.style.background = SELECTOR[k].bg
+    gsap.fromTo(w, { clipPath: `circle(0px at ${cx}px ${cy}px)` }, {
+      clipPath: `circle(${R}px at ${cx}px ${cy}px)`, duration: 0.6, ease: 'power3.inOut',
+      onComplete: () => { el.style.setProperty('--sel-bg', SELECTOR[k].bg); gsap.set(w, { clipPath: `circle(0px at ${cx}px ${cy}px)` }) },
+    })
+    gsap
+      .timeline({ onComplete: () => { idRef.current = k; setId(k) } })
+      .to(el.querySelectorAll('.sel-w'), { yPercent: -115, duration: 0.18, stagger: 0.02, ease: 'power3.in' }, 0)
+      .to(el.querySelectorAll('.sel-sub'), { y: -18, opacity: 0, duration: 0.18, stagger: 0.012, ease: 'power2.in' }, 0)
+      .to(el.querySelectorAll('.sel-fl-m'), { scale: 0, rotate: 120, opacity: 0, duration: 0.2, stagger: 0.03, ease: 'power2.in' }, 0)
+      .to(el.querySelector('.sel-turn'), { rotationY: -70, scale: 0.88, opacity: 0.2, y: 14, duration: 0.2, ease: 'power2.in', transformPerspective: 1100 }, 0)
+  }
+  api.current.next = () => go(ORDER[(ORDER.indexOf(idRef.current) + 1) % ORDER.length], AUTO_HOLD)
+  api.current.go = go
+  const pick = (k) => go(k, PICK_HOLD)
+
+  // the incoming half
+  useEffect(() => {
+    if (prevId.current === id) return // the first render (and React's dev double-mount) is not a transition
+    prevId.current = id
+    if (prefersReduced()) return
+    const el = root.current
+    const tl = gsap.timeline({
+      onComplete: () => {
+        busy.current = false
+        const q = pending.current
+        pending.current = null
+        if (q) go(q[0], q[1])
+        else hold(holdFor.current)
       },
-      0,
+    })
+    tl.fromTo(el.querySelector('.sel-turn'), { rotationY: 70, scale: 0.88, opacity: 0.2, y: 14 }, { rotationY: 0, scale: 1, opacity: 1, y: 0, duration: 0.45, ease: 'expo.out', transformPerspective: 1100 }, 0)
+      .fromTo(el.querySelectorAll('.sel-w'), { yPercent: 118, rotate: 5 }, { yPercent: 0, rotate: 0, duration: 0.45, stagger: 0.035, ease: 'expo.out' }, 0)
+      .fromTo(el.querySelectorAll('.sel-fl-m'), { scale: 0, rotate: -120, opacity: 0 }, { scale: 1, rotate: 0, opacity: 1, duration: 0.4, stagger: 0.05, ease: 'back.out(1.7)' }, 0.04)
+      .fromTo(el.querySelectorAll('.sel-sub'), { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, stagger: 0.025, ease: 'power3.out' }, 0.08)
+    // the particle burst is decoration: it is not part of the timeline, so it never delays the hold timer
+    gsap.fromTo(
+      el.querySelectorAll('.sel-p'),
+      { x: 0, y: 0, scale: 0, opacity: 1, rotation: 0 },
+      {
+        x: () => gsap.utils.random(-1, 1) * 280, y: () => gsap.utils.random(-1, 1) * 260,
+        scale: () => gsap.utils.random(0.6, 1.6), rotation: () => gsap.utils.random(-200, 200),
+        opacity: 0, duration: 0.8, stagger: 0.01, ease: 'power3.out', overwrite: true,
+      },
     )
-      .fromTo(el.querySelector('.sel-turn'), { rotationY: 75, scale: 0.92 }, { rotationY: 0, scale: 1, duration: 1.2, ease: 'expo.out', transformPerspective: 1100 }, 0.15)
-      .fromTo(el.querySelectorAll('.sel-w'), { yPercent: 118, rotate: 5 }, { yPercent: 0, rotate: 0, duration: 1.1, stagger: 0.08, ease: 'expo.out' }, 0.45)
-      .fromTo(el.querySelectorAll('.sel-fl-m'), { scale: 0, rotate: -120, opacity: 0 }, { scale: 1, rotate: 0, opacity: 1, duration: 1.1, stagger: 0.14, ease: 'back.out(1.7)' }, 0.6)
-      .fromTo(el.querySelectorAll('.sel-sub'), { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, stagger: 0.08, ease: 'power3.out' }, 0.7)
-      .fromTo(
-        el.querySelectorAll('.sel-p'),
-        { x: 0, y: 0, scale: 0, opacity: 1, rotation: 0 },
-        {
-          x: () => gsap.utils.random(-1, 1) * 280,
-          y: () => gsap.utils.random(-1, 1) * 260,
-          scale: () => gsap.utils.random(0.6, 1.6),
-          rotation: () => gsap.utils.random(-200, 200),
-          opacity: 0, duration: 1.7, stagger: 0.02, ease: 'power3.out',
-        },
-        0.3,
-      )
     return () => tl.kill()
-  }, [id, f])
+  }, [id])
+
+  // auto-cycle: runs while the section is on screen, pauses when it leaves or the tab is hidden, resumes smoothly
+  useEffect(() => {
+    const el = root.current
+    const io = new IntersectionObserver(([e]) => {
+      inView.current = e.isIntersecting && e.intersectionRatio > 0.3
+      if (inView.current) { if (!busy.current && !pending.current) hold(seen.current ? 1000 : AUTO_HOLD); seen.current = true }
+      else clearTimeout(timer.current)
+    }, { threshold: [0, 0.3, 0.6] })
+    io.observe(el)
+    const vis = () => (document.hidden ? clearTimeout(timer.current) : inView.current && !busy.current && hold(1000))
+    document.addEventListener('visibilitychange', vis)
+    return () => { io.disconnect(); document.removeEventListener('visibilitychange', vis); clearTimeout(timer.current) }
+  }, [])
 
   /* scroll-in: the glass arrives from depth, text slides in, ingredients nudged by the cursor */
   useLayoutEffect(() => {
@@ -151,10 +210,16 @@ export default function FlavourSelector() {
                 <li className="sel-sub" key={n}>{n}</li>
               ))}
             </ul>
+            <div className="sel-buy sel-sub">
+              <span className="price">{SITE.currency}{price}</span>
+              <a className="btn btn-rose btn-sm" href="#flavours">Order Now</a>
+            </div>
           </div>
-          <div className="sel-tabs" role="tablist" aria-label="Choose a flavour">
-            {ORDER.map((k) => (
-              <button key={k} role="tab" aria-selected={id === k} className={`sel-tab${id === k ? ' on' : ''}`} onClick={() => pick(k)}>
+          <div className="sel-tabs" role="tablist" aria-label="Choose a flavour" ref={tabs}>
+            <span className="sel-ind" ref={ind} aria-hidden="true" />
+            {ORDER.map((k, i) => (
+              <button key={k} data-k={k} role="tab" aria-selected={active === k} className={`sel-tab${active === k ? ' on' : ''}`} onClick={() => pick(k)}>
+                <b>0{i + 1}</b>
                 <i style={{ background: SELECTOR[k].accent }} />
                 {SELECTOR[k].label}
               </button>

@@ -12,8 +12,11 @@ const Mango = () => <ING.cube color="#FFC247" />
 // toppings that belong to each featured flavour: [component, left %, top %, size px, parallax speed]
 const FEAT = [
   { id: 'strawberry', fl: [[ING.berry, 66, 16, 70, 1], [ING.jelly, 82, 68, 56, 1.6], [ING.petal, 60, 80, 44, 2]] },
+  { id: 'rose', fl: [[ING.petal, 64, 18, 66, 1.4], [ING.berry, 88, 24, 52, 1.8], [ING.pistachio, 70, 78, 46, 1]] },
   { id: 'mango', fl: [[Mango, 64, 18, 60, 1.3], [ING.almond, 88, 22, 54, 1.8], [ING.cherry, 72, 78, 44, 1]] },
   { id: 'pistachio', fl: [[ING.pistachio, 60, 20, 62, 1.5], [ING.basil, 90, 28, 48, 1], [ING.almond, 64, 76, 50, 2]] },
+  { id: 'chocolate', fl: [[ING.almond, 62, 18, 58, 1.4], [ING.cherry, 88, 26, 48, 1.8], [ING.basil, 66, 78, 44, 1]] },
+  { id: 'dryfruit', fl: [[ING.almond, 64, 20, 62, 1.6], [ING.pistachio, 90, 30, 52, 1.2], [ING.petal, 70, 78, 46, 2]] },
 ]
 
 /*
@@ -39,7 +42,7 @@ export default function OneGlass() {
         defaults: { ease: 'none' },
         scrollTrigger: {
           trigger: el, start: 'top top', pin: true, scrub: 0.7, anticipatePin: 1, invalidateOnRefresh: true,
-          end: () => `+=${Math.round(window.innerHeight * (mobile ? 1.0 : 1.25) * (n - 1 + 0.7))}`,
+          end: () => `+=${Math.round(window.innerHeight * (mobile ? 0.75 : 0.95) * (n - 1 + 0.7))}`,
           onUpdate: (self) => {
             const i = gsap.utils.clamp(0, n - 1, Math.round((self.progress * tl.duration() - 0.35) / 1))
             el.querySelectorAll('.og-rail button').forEach((b, k) => b.classList.toggle('on', k === i))

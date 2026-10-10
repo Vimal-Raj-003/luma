@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "ing:cutouts": "node tools/make-ingredient-cutouts.mjs",
     "frame:empty": "node tools/make-empty-frame.mjs",
     "dev": "vite",
     "build": "vite build",

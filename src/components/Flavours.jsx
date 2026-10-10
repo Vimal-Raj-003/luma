@@ -15,12 +15,6 @@ export function SectionHead({ eyebrow, title, children, center = false }) {
   )
 }
 
-// Opens the order flow: the Build Your Falooda section with this flavour already chosen
-const openBuilder = (id) => {
-  window.dispatchEvent(new CustomEvent('luma:build', { detail: { id } }))
-  document.getElementById('build')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
 export default function Flavours() {
   const [sheet, setSheet] = useState(null)
   const store = useStore()
@@ -57,7 +51,7 @@ export default function Flavours() {
                       {SITE.currency}
                       {f.price}
                     </span>
-                    <a className="btn btn-dark btn-sm" href="#build" aria-label={`Order ${f.name}`} onClick={(e) => { e.preventDefault(); setSheet(f) }}>
+                    <a className="btn btn-dark btn-sm" href="#flavours" aria-label={`Order ${f.name}`} onClick={(e) => { e.preventDefault(); setSheet(f) }}>
                       Order Now
                     </a>
                   </div>
@@ -67,7 +61,7 @@ export default function Flavours() {
           ))}
         </ul>
       </div>
-      {sheet && <ProductSheet f={sheet} onClose={() => setSheet(null)} onCustomise={(id) => { setSheet(null); setTimeout(() => openBuilder(id), 60) }} />}
+      {sheet && <ProductSheet f={sheet} onClose={() => setSheet(null)} />}
     </section>
   )
 }

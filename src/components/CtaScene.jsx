@@ -53,7 +53,7 @@ export default function CtaScene() {
         <p className="cta-sub">Creamy. Colourful. Refreshingly unforgettable.</p>
         <div className="cta-btns">
           <a className="btn btn-rose" href={SITE.contact.orderHref}>Order Now</a>
-          <a className="btn btn-glass" href="#flavours">Explore Menu</a>
+          <a className="btn btn-glass" href="#flavours">Explore Flavours</a>
         </div>
       </div>
     </section>

@@ -52,7 +52,7 @@ const ITEMS = [
   { i: <Drop />, t: 'Made Fresh', d: 'Layered to order, chilled and served at once.' },
   { i: <Scoop />, t: 'Premium Ice Cream', d: 'Slow-churned, creamy and never icy.' },
   { i: <Rose />, t: 'Authentic Flavours', d: 'Classic recipes with a modern, lighter hand.' },
-  { i: <Lock />, t: 'Secure Ordering', d: 'Simple, safe ordering from tap to table.' },
+  { i: <Lock />, t: 'Secure Payments', d: 'Safe, simple payments at checkout.' },
 ]
 
 export default function WhyLuma() {

@@ -1,4 +1,4 @@
-// Deterministic geometry for the Falooda glass. Shared by <FaloodaGlass/> and tools/make-assets.mjs
+// Deterministic geometry for the Falooda glass illustration. Used by tools/make-assets.mjs (which renders the ingredient sprites).
 // (so the pre-rendered shading sprites line up exactly with the vector scoops).
 
 export const rng = (seed) => {

@@ -14,7 +14,8 @@ gsap.registerPlugin(ScrollTrigger)
   Phones keep every reveal but use shorter distances, fewer particles and no cursor effects.
 */
 const SECTIONS = '.section'
-const BRIDGED = '#flavours, #why, #build, #reviews, #faq, #visit'
+const NO_MASK = new Set(['why', 'visit', 'flavours'])
+const BRIDGED = '#flavours, #why, #reviews, #faq, #visit'
 
 export function useScrollFx(scope) {
   useLayoutEffect(() => {
@@ -86,13 +87,6 @@ export function useScrollFx(scope) {
           .from(it.querySelectorAll('h3, p'), { y: 14, opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power3.out' }, s + 0.45)
       })
 
-      /* ---------- builder ---------- */
-      const bp = root.querySelector('.b-sum')
-      if (bp) {
-        gsap.from([bp, root.querySelector('.b-add-d')].filter(Boolean), { y: 30 * d, opacity: 0, duration: 0.8, stagger: 0.12, ease: 'power3.out', scrollTrigger: at(bp, { start: 'top 95%' }) })
-        gsap.fromTo('.b-disc', { yPercent: 18 }, { yPercent: -18, ease: 'none', scrollTrigger: scrub('#build') })
-      }
-
       /* ---------- reviews ---------- */
       const rn = root.querySelector('.rev-nav')
       if (rn) gsap.from(rn, { y: 20, opacity: 0, duration: 0.7, ease: 'power3.out', scrollTrigger: at(rn, { start: 'top 95%' }) })
@@ -129,7 +123,8 @@ export function useScrollFx(scope) {
       gsap.utils.toArray(BRIDGED).forEach((sec) => {
         if (!root.contains(sec)) return
         const inset = mobile ? 'inset(28px 10px 0px 10px round 28px 28px 0px 0px)' : 'inset(56px 3% 0px 3% round 56px 56px 0px 0px)'
-        gsap.fromTo(sec, { clipPath: inset }, { clipPath: 'inset(0px 0% 0px 0% round 0px 0px 0px 0px)', ease: 'none', scrollTrigger: { trigger: sec, start: 'top 100%', end: 'top 45%', scrub: 0.6 }, clearProps: 'clipPath' })
+        // no mask where the section below a dark scene opens: the cream page behind would show through the cut corners
+        if (!NO_MASK.has(sec.id)) gsap.fromTo(sec, { clipPath: inset }, { clipPath: 'inset(0px 0% 0px 0% round 0px 0px 0px 0px)', ease: 'none', scrollTrigger: { trigger: sec, start: 'top 100%', end: 'top 45%', scrub: 0.6 }, clearProps: 'clipPath' })
         const wrap = sec.querySelector(':scope > .wrap')
         if (wrap) gsap.fromTo(wrap, { y: 46 * d, scale: 0.975 }, { y: 0, scale: 1, ease: 'none', transformOrigin: '50% 0%', scrollTrigger: { trigger: sec, start: 'top 100%', end: 'top 40%', scrub: 0.6 }, clearProps: 'transform' })
       })
