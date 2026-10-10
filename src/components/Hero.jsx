@@ -26,18 +26,18 @@ const FINAL = 30
 const SKIP = new Set([11, 12, 13, 14, 15, 16, 17, 29])
 const SEQ = [0, ...Array.from({ length: COUNT }, (_, i) => i + 1).filter((n) => !SKIP.has(n))] // frame 0: the empty glass (tools/make-empty-frame.mjs)
 /*
-  Opening = ONE master clock that drives the frames, the ingredient layers, the zoom and the copy, so they cannot drift apart:
-    0.0 – 0.5   empty glass, a slow cinematic zoom-out from 1.15 (phones 1.05) to 1.0 starts; background already moving; no text, logo or buttons
-    0.5 – 1.5   syrup, then milk fill the glass; strawberries, jelly, seeds and droplets travel in from outside the frame
-    1.5 – 2.2   basil seeds, sev and jelly settle, milk and syrup keep swirling
-    2.2 – 2.8   the ice cream scoop lands, toppings settle
-    2.5 logo · 2.65 eyebrow · 2.8 – 3.3 headline · 3.3 – 3.6 supporting text · 3.6 – 4.0 buttons · 3.7 navigation
-    4.3 +       the finished Falooda is held; only ambient motion continues (glow, bokeh, particles, slow camera drift, cursor parallax)
+  Opening = ONE master clock (a single paused GSAP timeline driven by it) for the frames, ingredient layers, zoom and copy; every stage overlaps the next:
+    0.0 – 0.3   glass appears and settles (zoom 1.15 → 1.0, phones 1.05)
+    0.2 – 0.8   syrup fills                        0.4 – 1.2   milk pours
+    0.6 – 1.4   jelly, basil seeds and sev travel in      0.9 – 1.6   strawberries enter and settle
+    1.3 – 2.0   the ice cream scoop lands          1.6 – 2.3   final toppings fall into place
+    2.0 logo · 2.15 headline · 2.5 supporting text · 2.65 buttons · 2.7 navigation
+    3.2 +       the finished Falooda is held; only ambient motion continues (glow, bokeh, particles, slow camera drift, cursor parallax)
   Formation checkpoints are [source frame, seconds after the formation starts]; the steps in between are spread evenly.
 */
-const FORM_AT = 0.5
-const END = 4.3
-const CHECK = [[0, 0], [1, 0.2], [5, 0.45], [10, 0.9], [18, 1.45], [20, 1.7], [26, 2.1], [28, 2.2], [30, 2.3]]
+const FORM_AT = 0.15
+const END = 3.2
+const CHECK = [[0, 0], [1, 0.1], [5, 0.35], [10, 0.8], [18, 1.15], [20, 1.3], [26, 1.7], [28, 1.8], [30, 2.05]]
 const STEP = SEQ.map((n, i) => {
   if (i === SEQ.length - 1) return 0
   const k = CHECK.findIndex(([f]) => f > n) // first checkpoint after this frame
@@ -46,7 +46,7 @@ const STEP = SEQ.map((n, i) => {
   return (tb - ta) / (SEQ.indexOf(fb) - SEQ.indexOf(fa))
 })
 const T = STEP.reduce((acc, s, i) => (acc.push(i ? acc[i - 1] + STEP[i - 1] : 0), acc), [])
-const DURATION = T[T.length - 1] // formation length (2.3): the time at which the last frame is reached
+const DURATION = T[T.length - 1] // formation length (2.05): the time at which the last frame is reached
 const GLASS_X = 0.61 // the glass is steady in the source frames (measured: centre drift ≤ 2%, almost all of it splash), so one fixed anchor is used
 
 /*
@@ -57,17 +57,18 @@ const GLASS_X = 0.61 // the glass is steady in the source frames (measured: cent
 */
 const rnd = (a, b, i) => a + (((i * 37) % 100) / 100) * (b - a)
 const INGS = [
-  { img: 'straw-half', s: 0.105, x: 0.568, y: 0.285, fx: -0.36, fy: -0.5, t: 0.25, d: 1.35, ex: 0.004, ey: 0.02, e: 0.4, sc: 0.85, r0: -50, r1: 8, m: 1 },
-  { img: 'straw-whole', s: 0.115, x: 0.66, y: 0.29, fx: 0.32, fy: -0.5, t: 0.35, d: 1.3, ex: -0.004, ey: 0.02, e: 0.4, sc: 0.85, r0: 40, r1: -6, m: 1 },
-  { img: 'jelly-a', s: 0.06, x: 0.597, y: 0.34, fx: -0.1, fy: -0.55, t: 0.45, d: 0.85, ex: -0.01, ey: 0.2, e: 0.4, sc: 0.6, r0: -70, r1: 15, fall: 1, m: 1 },
-  { img: 'jelly-b', s: 0.068, x: 0.63, y: 0.345, fx: 0.12, fy: -0.58, t: 0.6, d: 0.85, ex: 0.01, ey: 0.2, e: 0.4, sc: 0.6, r0: 80, r1: -10, fall: 1, m: 0 },
-  { img: 'jelly-a', s: 0.052, x: 0.612, y: 0.32, fx: 0, fy: -0.6, t: 0.75, d: 0.8, ex: 0, ey: 0.2, e: 0.4, sc: 0.6, r0: 30, r1: -20, fall: 1, m: 1 },
-  ...Array.from({ length: 6 }, (_, i) => ({ seed: 1, s: 0.011, x: rnd(0.565, 0.66, i + 3), y: 0.33, fx: rnd(-0.08, 0.08, i + 1), fy: -0.5 - (i % 3) * 0.05, t: 0.5 + i * 0.1, d: 0.7, ex: 0, ey: 0.17, e: 0.4, sc: 0.7, r0: 0, r1: 90, fall: 1, m: i % 2 === 0 })),
-  ...[[0.6, 0.235, -0.1, 1.85], [0.632, 0.215, 0.11, 1.95], [0.618, 0.255, 0, 2.05]].map(([x, y, fx, t], i) => ({ pist: 1, s: 0.016, x, y, fx, fy: -0.5, t, d: 0.45, ex: 0, ey: 0.02, e: 0.2, sc: 0.85, r0: -80, r1: 10 + i * 20, fall: 1, m: i !== 1 })),
-  { img: 'drop-a', s: 0.03, x: 0.532, y: 0.45, fx: -0.32, fy: -0.12, t: 0.3, d: 0.9, ex: 0.012, ey: 0.01, e: 0.3, sc: 0.35, r0: 0, r1: 0, m: 1 },
-  { img: 'drop-b', s: 0.034, x: 0.695, y: 0.5, fx: 0.32, fy: 0, t: 0.4, d: 0.9, ex: -0.012, ey: 0.01, e: 0.3, sc: 0.35, r0: 0, r1: 0, m: 1 },
-  { img: 'drop-c', s: 0.02, x: 0.53, y: 0.6, fx: -0.3, fy: 0.05, t: 0.6, d: 0.85, ex: 0.012, ey: 0.01, e: 0.3, sc: 0.35, r0: 0, r1: 0, m: 0 },
-  ...Array.from({ length: 3 }, (_, i) => ({ drop: 1, s: 0.011 + i * 0.004, x: i % 2 ? 0.7 : 0.53, y: 0.42 + i * 0.07, fx: i % 2 ? 0.28 : -0.28, fy: rnd(-0.2, 0.05, i + 2), t: 0.5 + i * 0.1, d: 0.8, ex: i % 2 ? -0.015 : 0.015, ey: 0.01, e: 0.3, sc: 0.3, r0: 0, r1: 0, m: i !== 1 })),
+  { img: 'straw-half', s: 0.105, x: 0.568, y: 0.285, fx: -0.36, fy: -0.5, t: 0.5, d: 0.8, ex: 0.004, ey: 0.02, e: 0.3, sc: 0.85, r0: -50, r1: 8, m: 1 },
+  { img: 'straw-whole', s: 0.115, x: 0.66, y: 0.29, fx: 0.32, fy: -0.5, t: 0.6, d: 0.75, ex: -0.004, ey: 0.02, e: 0.3, sc: 0.85, r0: 40, r1: -6, m: 1 },
+  { img: 'jelly-a', s: 0.06, x: 0.597, y: 0.34, fx: -0.1, fy: -0.55, t: 0.35, d: 0.6, ex: -0.01, ey: 0.2, e: 0.3, sc: 0.6, r0: -70, r1: 15, fall: 1, m: 1 },
+  { img: 'jelly-b', s: 0.068, x: 0.63, y: 0.345, fx: 0.12, fy: -0.58, t: 0.45, d: 0.6, ex: 0.01, ey: 0.2, e: 0.3, sc: 0.6, r0: 80, r1: -10, fall: 1, m: 0 },
+  { img: 'jelly-a', s: 0.052, x: 0.612, y: 0.32, fx: 0, fy: -0.6, t: 0.55, d: 0.55, ex: 0, ey: 0.2, e: 0.3, sc: 0.6, r0: 30, r1: -20, fall: 1, m: 1 },
+  ...Array.from({ length: 6 }, (_, i) => ({ seed: 1, s: 0.011, x: rnd(0.565, 0.66, i + 3), y: 0.33, fx: rnd(-0.08, 0.08, i + 1), fy: -0.5 - (i % 3) * 0.05, t: 0.55 + i * 0.05, d: 0.5, ex: 0, ey: 0.17, e: 0.3, sc: 0.7, r0: 0, r1: 90, fall: 1, m: i % 2 === 0 })),
+  ...Array.from({ length: 5 }, (_, i) => ({ sev: 1, s: 0.05, x: rnd(0.575, 0.65, i + 5), y: 0.34, fx: rnd(-0.1, 0.1, i + 2), fy: -0.5 - (i % 2) * 0.06, t: 0.6 + i * 0.06, d: 0.55, ex: 0, ey: 0.16, e: 0.3, sc: 0.8, r0: -50 + i * 25, r1: -10 + i * 20, fall: 1, m: i % 2 === 0 })),
+  ...[[0.6, 0.235, -0.1, 1.55], [0.632, 0.215, 0.11, 1.65], [0.618, 0.255, 0, 1.75]].map(([x, y, fx, t], i) => ({ pist: 1, s: 0.016, x, y, fx, fy: -0.5, t, d: 0.4, ex: 0, ey: 0.02, e: 0.2, sc: 0.85, r0: -80, r1: 10 + i * 20, fall: 1, m: i !== 1 })),
+  { img: 'drop-a', s: 0.03, x: 0.532, y: 0.45, fx: -0.32, fy: -0.12, t: 0.2, d: 0.65, ex: 0.012, ey: 0.01, e: 0.25, sc: 0.35, r0: 0, r1: 0, m: 1 },
+  { img: 'drop-b', s: 0.034, x: 0.695, y: 0.5, fx: 0.32, fy: 0, t: 0.25, d: 0.65, ex: -0.012, ey: 0.01, e: 0.25, sc: 0.35, r0: 0, r1: 0, m: 1 },
+  { img: 'drop-c', s: 0.02, x: 0.53, y: 0.6, fx: -0.3, fy: 0.05, t: 0.35, d: 0.6, ex: 0.012, ey: 0.01, e: 0.25, sc: 0.35, r0: 0, r1: 0, m: 0 },
+  ...Array.from({ length: 3 }, (_, i) => ({ drop: 1, s: 0.011 + i * 0.004, x: i % 2 ? 0.7 : 0.53, y: 0.42 + i * 0.07, fx: i % 2 ? 0.28 : -0.28, fy: rnd(-0.2, 0.05, i + 2), t: 0.3 + i * 0.07, d: 0.6, ex: i % 2 ? -0.015 : 0.015, ey: 0.01, e: 0.25, sc: 0.3, r0: 0, r1: 0, m: i !== 1 })),
 ]
 
 // each ribbon has two outlines with identical commands, so GSAP can morph between them
@@ -94,7 +95,7 @@ export default function Hero() {
       gsap.set('.vh-eyebrow', { y: 14, opacity: 0 })
       gsap.set(document.querySelectorAll('.nav .logo, .nav-links, .nav-end'), { opacity: 0, y: -10 }) // the navbar belongs to the reveal too
       gsap.set('.vh-sub', { y: 26, opacity: 0 })
-      gsap.set('.vh-cta .btn', { y: 30, opacity: 0, scale: 0.94 })
+      gsap.set('.vh-cta .btn', { y: 30, opacity: 0.01, scale: 0.94 }) // 0.01, not 0: the browser rasterises the buttons (shadows, glass blur) during the opening instead of in the middle of their reveal
     }, root)
     return () => ctx.revert()
   }, [still])
@@ -165,13 +166,13 @@ export default function Hero() {
       copyTl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } })
       const navLogo = document.querySelectorAll('.nav .logo'), navRest = document.querySelectorAll('.nav-links, .nav-end')
       copyTl
-        .fromTo('.vh-breathe', { scale: mobile ? 1.05 : 1.15 }, { scale: 1, duration: 1.8, ease: 'power3.out' }, 0)
-        .to(navLogo, { opacity: 1, y: 0, duration: 0.6 }, 2.5)
-        .to('.vh-eyebrow', { y: 0, opacity: 1, duration: 0.6 }, 2.65)
-        .to('.vh-line .vh-word', { yPercent: 0, rotate: 0, duration: 0.7, ease: 'expo.out', stagger: 0.1 }, 2.8)
-        .to('.vh-sub', { y: 0, opacity: 1, duration: 0.5 }, 3.3)
-        .to('.vh-cta .btn', { y: 0, opacity: 1, scale: 1, duration: 0.45, stagger: 0.1 }, 3.6)
-        .to(navRest, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08 }, 3.7)
+        .fromTo('.vh-breathe', { scale: mobile ? 1.05 : 1.15 }, { scale: 1, duration: 1.1, ease: 'power3.out' }, 0)
+        .to(navLogo, { opacity: 1, y: 0, duration: 0.5 }, 2.0)
+        .to('.vh-eyebrow', { y: 0, opacity: 1, duration: 0.5 }, 2.1)
+        .to('.vh-line .vh-word', { yPercent: 0, rotate: 0, duration: 0.6, ease: 'expo.out', stagger: 0.08 }, 2.15)
+        .to('.vh-sub', { y: 0, opacity: 1, duration: 0.45 }, 2.5)
+        .to('.vh-cta .btn', { y: 0, opacity: 1, scale: 1, duration: 0.4, stagger: 0.08 }, 2.65)
+        .to(navRest, { opacity: 1, y: 0, duration: 0.45, stagger: 0.06 }, 2.7)
       cleanups.push(() => copyTl.kill())
     }
     // if the frames can never play (slow network, blocked), do not leave the page without its headline
@@ -180,6 +181,8 @@ export default function Hero() {
       revealed.current = true
       copyLive = false
       gsap.set('.vh-ings', { display: 'none' }) // no product to feed: the ingredient layers would fly into nothing
+      window.__heroReady = true
+      window.dispatchEvent(new Event('luma:hero-ready'))
       copyTl.tweenTo(END, { duration: 1.4, ease: 'none' })
     }
 
@@ -234,7 +237,7 @@ export default function Hero() {
     const bitmap = (n) => { const v = cache.get(n); return v && typeof v.close === 'function' ? v : null }
     const window_ = (k) => { // decode a few frames ahead of the playhead, free the ones behind it
       const keep = new Set()
-      for (let i = Math.max(0, k - 1); i <= Math.min(SEQ.length - 1, k + 6); i++) { keep.add(SEQ[i]); decode(SEQ[i]) }
+      for (let i = Math.max(0, k - 1); i <= Math.min(SEQ.length - 1, k + 9); i++) { keep.add(SEQ[i]); decode(SEQ[i]) }
       keep.add(SEQ[SEQ.length - 1])
       for (const [n, v] of cache) if (!keep.has(n)) { if (v && typeof v.close === 'function') v.close(); cache.delete(n) }
     }
@@ -261,9 +264,9 @@ export default function Hero() {
       el.querySelectorAll('.vh-ing').forEach((node) => {
         const d = INGS[+node.dataset.i]
         copyTl
-          .fromTo(node, { opacity: 0 }, { opacity: 1, duration: Math.min(0.25, d.d * 0.3), ease: 'power1.out' }, d.t)
-          .fromTo(node, { x: () => d.fx * FW_(), rotate: d.r0 }, { x: 0, rotate: d.r1, duration: d.d, ease: 'power1.inOut' }, d.t)
-          .fromTo(node, { y: () => d.fy * FH_() }, { y: 0, duration: d.d, ease: d.fall ? 'power2.in' : 'power2.inOut' }, d.t)
+          .fromTo(node, { opacity: 0.01 }, { opacity: 1, duration: Math.min(0.15, d.d * 0.25), ease: 'power1.out' }, d.t) // 0.01, not 0: the browser prepares the layer during the preload instead of at first sight
+          .fromTo(node, { x: () => d.fx * FW_(), rotate: d.r0 }, { x: 0, rotate: d.r1, duration: d.d, ease: 'power2.out' }, d.t)
+          .fromTo(node, { y: () => d.fy * FH_() }, { y: 0, duration: d.d, ease: d.fall ? 'power2.in' : 'power1.in' }, d.t)
           .to(node, { x: () => d.ex * FW_(), y: () => d.ey * FH_(), scale: d.sc, opacity: 0, duration: d.e, ease: 'power1.in' }, d.t + d.d)
       })
     }
@@ -279,7 +282,10 @@ export default function Hero() {
       if (copyTl && copyLive) copyTl.time(Math.min(END, tPlay))
       if (tPlay >= END + 0.1) {
         if (!paint(DURATION)) return // wait until the last frame is decoded
-        done = true // hold the finished state: no loop (a dessert vanishing back to an empty glass looks unnatural)
+        done = true
+        window.__heroReady = true
+        window.dispatchEvent(new Event('luma:hero-ready')) // the rest of the page may mount now
+        // hold the finished state: no loop (a dessert vanishing back to an empty glass looks unnatural)
         paint(DURATION)
         if (copyTl && copyLive) copyTl.progress(1)
         cancelAnimationFrame(frameRaf)
@@ -300,6 +306,8 @@ export default function Hero() {
         const bm = await decode(FINAL)
         if (alive && bm) { cache.set(FINAL, bm); const dx = geo.dx * fdpr; fx.drawImage(bm, dx, geo.oy * fdpr, geo.dw * fdpr, geo.dh * fdpr) }
         revealed.current = true
+        window.__heroReady = true
+        window.dispatchEvent(new Event('luma:hero-ready'))
         return
       }
       try {
@@ -309,11 +317,13 @@ export default function Hero() {
         await decode(SEQ[0])
         if (!alive) return
         paint(0)
-        gsap.to('.vh-frames', { opacity: 1, duration: 0.45, ease: 'power2.out' })
+        gsap.to('.vh-frames', { opacity: 1, duration: 0.3, ease: 'power2.out' })
         // then every other frame is preloaded before the story starts moving
         await Promise.all(SEQ.slice(1).map(fetchBlob))
         if (!alive) return
-        await Promise.all(SEQ.slice(0, 8).map(decode))
+        await Promise.all(SEQ.map(decode)) // the whole build is decoded before the clock starts (about 23 frames; they are released as the playhead passes)
+        // the ingredient cut-outs are decoded before the clock starts, so nothing pops in mid-flight
+        await Promise.all([...el.querySelectorAll('.vh-ing img')].map((im) => (im.decode ? im.decode().catch(() => {}) : null)))
         if (!alive) return
         started = true
         lastNow = performance.now()
@@ -456,7 +466,7 @@ export default function Hero() {
               <div className="vh-ings" aria-hidden="true">
                 {INGS.map((d, i) => (!still && (d.m || window.innerWidth >= 900) ? (
                   <div className={`vh-ing${d.img ? ' ph' : ''}`} data-i={i} key={i} style={{ left: `${d.x * 100}%`, top: `${d.y * 100}%`, '--s': d.s }}>
-                    {d.img ? <img src={`${BASE}assets/hero-ing/${d.img}.png`} alt="" draggable="false" /> : <i className={d.seed ? 'vh-seed' : d.pist ? 'vh-pist' : 'vh-drop'} />}
+                    {d.img ? <img src={`${BASE}assets/hero-ing/${d.img}.png`} alt="" draggable="false" /> : <i className={d.seed ? 'vh-seed' : d.pist ? 'vh-pist' : d.sev ? 'vh-sev' : 'vh-drop'} />}
                   </div>
                 ) : null))}
               </div>
