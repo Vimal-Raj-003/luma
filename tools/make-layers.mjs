@@ -24,10 +24,12 @@ await page.goto(`${process.env.RENDER_URL || 'http://localhost:5180'}/`, { waitU
 const result = await page.evaluate(async () => {
   const load = async (n) => { const i = new Image(); i.src = `/assets/photo/${n}.jpg`; await i.decode(); return i }
   const [fin, emp] = [await load('final'), await load('empty')]
+  const raw = new Image(); raw.src = '/tools/hero-src/shot-final.jpg'; await raw.decode()
   const BOX = { X: 560, Y: 20, W: 1080, H: 900 }
   const canvas = () => { const c = document.createElement('canvas'); c.width = BOX.W; c.height = BOX.H; return c }
   const crop = (img) => { const c = canvas(); c.getContext('2d').drawImage(img, -BOX.X, -BOX.Y); return c }
   const FIN = crop(fin), EMP = crop(emp)
+  const RAW = (() => { const c = canvas(); c.getContext('2d').drawImage(raw, -BOX.X + 120, -BOX.Y); return c })()
   const poly = (pts) => { const p = new Path2D(); pts.forEach(([x, y], i) => (i ? p.lineTo(x - BOX.X, y - BOX.Y) : p.moveTo(x - BOX.X, y - BOX.Y))); p.closePath(); return p }
   // soft-edged cut: mask (blurred a touch) × source
   const cut = (src, path2d, feather = 1.4) => {
@@ -123,11 +125,11 @@ const result = await page.evaluate(async () => {
   })
 
   // loose pieces: keep what differs from the surrounding background colour (sampled on a ring just outside), soft threshold
-  const looseCut = (cx, cy, rx, ry, rot = 0) => {
+  const looseCut = (cx, cy, rx, ry, rot = 0, SRC = FIN) => {
     const W = Math.round(rx * 2 + 24), H = Math.round(ry * 2 + 24)
     const sx = cx - BOX.X - W / 2, sy = cy - BOX.Y - H / 2
     const cc = document.createElement('canvas'); cc.width = W; cc.height = H
-    const x = cc.getContext('2d', { willReadFrequently: true }); x.drawImage(FIN, -sx, -sy)
+    const x = cc.getContext('2d', { willReadFrequently: true }); x.drawImage(SRC, -sx, -sy)
     const id = x.getImageData(0, 0, W, H), dd = id.data
     const ex = (px, py) => { const c = Math.cos(-rot), s2 = Math.sin(-rot), dx = px - W / 2, dy = py - H / 2; const u = (dx * c - dy * s2) / rx, v = (dx * s2 + dy * c) / ry; return Math.hypot(u, v) }
     let r = 0, g = 0, b = 0, cnt = 0
@@ -136,8 +138,8 @@ const result = await page.evaluate(async () => {
     for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
       const k = (py * W + px) * 4, e = ex(px, py)
       const dist = Math.hypot(dd[k] - r, dd[k + 1] - g, dd[k + 2] - b)
-      let a = Math.max(0, Math.min(1, (dist - 38) / 55))
-      a *= Math.max(0, Math.min(1, (1.08 - e) / 0.1))
+      let a = Math.max(0, Math.min(1, (dist - 64) / 38))
+      a *= Math.max(0, Math.min(1, (0.96 - e) / 0.1))
       dd[k + 3] = Math.round(a * 255)
     }
     x.putImageData(id, 0, 0)
@@ -152,12 +154,12 @@ const result = await page.evaluate(async () => {
     out.files[`berry-${i}`] = png(r.canvas)
     out.berries.push({ file: `berry-${i}`, x: r.x, y: r.y, w: r.w, h: r.h })
   })
-  // jelly cubes that rest on the table beside the glass
-  out.table = []
-  ;[[822, 853, 50, 46], [1372, 852, 46, 42], [1612, 822, 46, 44]].forEach((e, i) => {
-    const r = looseCut(...e)
-    out.files[`tcube-${i}`] = png(r.canvas)
-    out.table.push({ file: `tcube-${i}`, x: r.x, y: r.y, w: r.w, h: r.h })
+  // a clean floating jelly cube, cut from the original (un-retouched) photo where it is sharp against the dark background
+  out.floaters = []
+  ;[[786, 316, 62, 56, -0.2, 'fcube-0']].forEach(([cx, cy, rx, ry, rot, name]) => {
+    const r = looseCut(cx, cy, rx, ry, rot, RAW)
+    out.files[name] = png(r.canvas)
+    out.floaters.push({ file: name, x: r.x, y: r.y, w: r.w, h: r.h })
   })
 
   // ---- scoop (+ rim toppings + drizzle), same crop box ----
@@ -180,7 +182,7 @@ const result = await page.evaluate(async () => {
 })
 
 for (const [name, data] of Object.entries(result.files)) fs.writeFileSync(path.join(OUT, `${name}.png`), Buffer.from(data.split(',')[1], 'base64'))
-fs.writeFileSync(path.join(OUT, '..', 'layers.json'), JSON.stringify({ box: result.box, cubes: result.cubes, berries: result.berries, table: result.table }, null, 1))
+fs.writeFileSync(path.join(OUT, '..', 'layers.json'), JSON.stringify({ box: result.box, cubes: result.cubes, berries: result.berries, floaters: result.floaters }, null, 1))
 console.log('layers:', Object.keys(result.files).join(', '))
-console.log('in-glass cubes:', result.cubes.length, '| table cubes:', result.table.length, '| berries:', result.berries.length)
+console.log('in-glass cubes:', result.cubes.length, '| floating cubes:', result.floaters.length, '| berries:', result.berries.length)
 await browser.close()

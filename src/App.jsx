@@ -1,37 +1,42 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Nav from './components/Nav'
 import Hero from './components/Hero'
-import FlavourSelector from './components/FlavourSelector'
-import Marquee from './components/Marquee'
-import Flavours from './components/Flavours'
-import WhyLuma from './components/WhyLuma'
-import Signature from './components/Signature'
-import Builder from './components/Builder'
-import Testimonials from './components/Testimonials'
-import Visit from './components/Visit'
-import Footer from './components/Footer'
 import MotionNotice from './components/MotionNotice'
-import { useMicro, useReveal } from './hooks/motion'
+import { useMicro } from './hooks/motion'
 import { preloadAssets } from './assets'
+
+// everything below the hero is its own chunk
+const Below = lazy(() => import('./components/Below'))
 
 export default function App() {
   const [ready, setReady] = useState(false)
-  useReveal()
-  useMicro()
+  const [below, setBelow] = useState(() => typeof window !== 'undefined' && window.location.hash.length > 1)
+  useMicro() // nav + hero buttons (the rest is scoped inside <Below/>)
 
-  // pin/scrub positions depend on final layout (web fonts)
-  // start the opening once fonts are in (max ~0.9s), over a background-only screen
+  // nav reveal once fonts are in (max ~0.5s); sprite assets for the flavour sections are decoded in the background
   useEffect(() => {
     const go = () => setTimeout(() => setReady(true), 80)
     const fonts = document.fonts ? document.fonts.ready : Promise.resolve()
-    Promise.all([Promise.race([fonts, new Promise((r) => setTimeout(r, 450))]), preloadAssets()]).then(go)
+    Promise.race([fonts, new Promise((r) => setTimeout(r, 450))]).then(go)
+    preloadAssets()
   }, [])
+
+  // mount the rest of the page once the hero is under way (idle), or immediately if the visitor interacts / follows an anchor
+  useEffect(() => {
+    if (below) return
+    const open = () => setBelow(true)
+    const idle = window.requestIdleCallback ? window.requestIdleCallback(open, { timeout: 2500 }) : setTimeout(open, 1500)
+    const first = ['scroll', 'wheel', 'touchstart', 'keydown', 'pointerdown']
+    first.forEach((e) => window.addEventListener(e, open, { once: true, passive: true }))
+    return () => {
+      first.forEach((e) => window.removeEventListener(e, open))
+      window.cancelIdleCallback ? window.cancelIdleCallback(idle) : clearTimeout(idle)
+    }
+  }, [below])
 
   useEffect(() => {
     document.fonts?.ready.then(() => ScrollTrigger.refresh())
-    const t = setTimeout(() => ScrollTrigger.refresh(), 1500)
-    return () => clearTimeout(t)
   }, [])
 
   return (
@@ -39,16 +44,12 @@ export default function App() {
       <Nav ready={ready} />
       <main>
         <Hero />
-        <FlavourSelector />
-        <Marquee />
-        <Flavours />
-        <WhyLuma />
-        <Signature />
-        <Builder />
-        <Testimonials />
-        <Visit />
+        {below && (
+          <Suspense fallback={null}>
+            <Below />
+          </Suspense>
+        )}
       </main>
-      <Footer />
       <MotionNotice />
     </>
   )

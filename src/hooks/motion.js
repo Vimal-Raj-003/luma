@@ -49,10 +49,11 @@ export function splitWords(root) {
 }
 
 /* Adds .in to [data-reveal] elements as they enter the viewport (CSS does the transition). */
-export function useReveal() {
+export function useReveal(scope) {
   useEffect(() => {
-    document.querySelectorAll('[data-split]').forEach(splitWords)
-    const els = [...document.querySelectorAll('[data-reveal]')]
+    const root = scope?.current || document
+    root.querySelectorAll('[data-split]').forEach(splitWords)
+    const els = [...root.querySelectorAll('[data-reveal]')]
     if (!('IntersectionObserver' in window)) {
       els.forEach((el) => el.classList.add('in'))
       return
@@ -76,7 +77,7 @@ export function useReveal() {
 }
 
 /* Subtle micro-interactions (desktop pointers only): magnetic buttons + tilting product cards. */
-export function useMicro() {
+export function useMicro(scope) {
   useEffect(() => {
     if (!finePointer() || prefersReduced()) return
     const offs = []
@@ -85,7 +86,8 @@ export function useMicro() {
       offs.push(() => el.removeEventListener(ev, fn))
     }
 
-    document.querySelectorAll('.btn, .sel-tab, .rev-nav button').forEach((b) => {
+    const root = scope?.current || document
+    root.querySelectorAll('.btn, .sel-tab, .rev-nav button').forEach((b) => {
       const xt = gsap.quickTo(b, 'x', { duration: 0.6, ease: 'power3.out' })
       const yt = gsap.quickTo(b, 'y', { duration: 0.6, ease: 'power3.out' })
       on(b, 'pointermove', (e) => {
@@ -99,7 +101,7 @@ export function useMicro() {
       })
     })
 
-    document.querySelectorAll('.card').forEach((card) => {
+    root.querySelectorAll('.card').forEach((card) => {
       const glass = card.querySelector('.glass-box')
       const rx = gsap.quickTo(card, 'rotationX', { duration: 0.7, ease: 'power3.out' })
       const ry = gsap.quickTo(card, 'rotationY', { duration: 0.7, ease: 'power3.out' })

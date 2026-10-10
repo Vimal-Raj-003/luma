@@ -26,3 +26,6 @@ desktop.ini
 
 # local reference material (not part of the site)
 /video/
+
+# source archive of the hero frames (the extracted frames live in public/hero-frames)
+/hero frames/

@@ -8,23 +8,29 @@ gsap.registerPlugin(ScrollTrigger)
 if (import.meta.env.DEV) window.__gsap = { gsap, ScrollTrigger } // dev-only: inspect the scroll system from the console
 
 /*
-  Front page. The background is generated live (no image, no video):
-    far  — slow plum/berry gradient blobs
-    mid  — flowing liquid ribbons whose outlines morph, plus a soft glow behind the product
-    near — a canvas of drifting glow particles that lean away from the cursor
-  The Falooda is a separate transparent cut-out (glass body + scoop) that GSAP builds in front of it:
-  the glass rises, the liquid fills upward behind a mask, the scoop drops and settles, then the copy reveals in order
-  (logo → headline word-by-word → supporting text → buttons). Scroll pins the hero, scales the product toward the camera
-  and washes plum → cream into the next section.
+  Front page.
+  Background (code): slow gradient blobs, morphing liquid ribbons, glow, and a cursor-reactive particle canvas.
+  Product: a 30-frame photographic sequence, played on a <canvas> by requestAnimationFrame (not an <img> slideshow, not setInterval):
+    - all frames are fetched before playback starts; they are decoded just ahead of the playhead (small memory footprint)
+    - neighbouring frames are cross-blended at the display's refresh rate, so there are no visible frame jumps
+    - frames with defects (see SKIP) are left out; the final frame is held, then the page stays on it (no jarring loop)
+  Copy reveals once the dessert is nearly finished. Scroll pins the hero and the next section rises over it.
 */
 const BASE = import.meta.env.BASE_URL
-const LAYER = (n) => `${BASE}assets/hero/layers/${n}.png`
+const frameUrl = (n) => `${BASE}hero-frames/ezgif-frame-${String(n).padStart(3, '0')}.jpg`
+const COUNT = 30
+const FINAL = 30
 
-// positions (percent of the shared 1080×900 crop box) written by tools/make-layers.mjs
-const CUBES = [{"f": "cube-0", "style": "left:57.222%;top:30.222%;width:11.204%;height:18.111%"}, {"f": "cube-1", "style": "left:41.481%;top:32.222%;width:16.852%;height:12.556%"}, {"f": "cube-2", "style": "left:67.037%;top:37.556%;width:5.185%;height:9.556%"}, {"f": "cube-3", "style": "left:54.907%;top:38.889%;width:7.407%;height:8.889%"}, {"f": "cube-4", "style": "left:50.370%;top:43.667%;width:6.204%;height:6.778%"}, {"f": "cube-5", "style": "left:51.944%;top:45.889%;width:11.296%;height:8.444%"}, {"f": "cube-6", "style": "left:59.722%;top:46.444%;width:8.333%;height:10.333%"}]
-const LOOSE = [{"f": "berry-0", "style": "left:11.481%;top:68.444%;width:22.963%;height:24.889%"}, {"f": "berry-1", "style": "left:74.630%;top:74.667%;width:21.481%;height:24.000%"}, {"f": "tcube-0", "style": "left:18.519%;top:86.111%;width:11.481%;height:12.889%"}, {"f": "tcube-1", "style": "left:69.815%;top:86.444%;width:10.741%;height:12.000%"}, {"f": "tcube-2", "style": "left:92.037%;top:82.889%;width:10.741%;height:12.444%"}] // strawberries + jelly cubes that rest beside the glass
-const css = (str) => Object.fromEntries(str.split(';').filter(Boolean).map((d) => d.split(':')))
-const FILL_CLIP = 'polygon(35.74% -45%, 74.44% -45%, 74.44% 26.9%, 72.87% 51.1%, 68.7% 93.3%, 41.67% 93.3%, 38.52% 51.1%, 35.74% 26.9%)' // the inside of the glass, extended upward so things can fall in from above the rim
+// Frames 13–16: the table strawberries/jelly turn into semi-transparent double exposures, then vanish. 29: blurred transition frame.
+const SKIP = new Set([13, 14, 15, 16, 29])
+const SEQ = Array.from({ length: COUNT }, (_, i) => i + 1).filter((n) => !SKIP.has(n))
+// seconds to dissolve from SEQ[i] to SEQ[i+1]: longer where the source jumps (12→17 gap, 28→30 content change)
+const STEP = SEQ.map((n, i) => (i === SEQ.length - 1 ? 0 : n === 12 ? 0.34 : n === 28 ? 0.5 : n < 12 ? 0.12 : 0.16))
+const T = STEP.reduce((acc, s, i) => (acc.push(i ? acc[i - 1] + STEP[i - 1] : 0), acc), [])
+const DURATION = T[T.length - 1] // time at which the last frame is reached
+const REVEAL_AT = DURATION - 0.9
+// where the glass sits in the 1920×1080 frames (fraction of width) — used to frame it right-of-centre without distortion
+const GLASS_X = 0.61
 
 // each ribbon has two outlines with identical commands, so GSAP can morph between them
 const RIBBONS = [
@@ -35,7 +41,9 @@ const RIBBONS = [
 
 export default function Hero() {
   const root = useRef(null)
-  const canvas = useRef(null)
+  const parts = useRef(null) // particle canvas
+  const frames = useRef(null) // product canvas
+  const revealed = useRef(false)
   const still = prefersReduced()
   const [light, setLight] = useState(false)
 
@@ -43,18 +51,7 @@ export default function Hero() {
     if (still) return
     const ctx = gsap.context(() => {
       gsap.set('.vh-bgfar, .vh-bgmid, .vh-glow', { opacity: 0 })
-      gsap.set('.vh-prod', { yPercent: 28, scale: 0.9, rotate: 3, opacity: 0, transformPerspective: 1100, rotationX: 10 })
-      // every layer starts out of the glass and builds on its own
-      gsap.set('.vh-syrup', { scaleY: 0.02, opacity: 0, transformOrigin: '50% 96%' })
-      gsap.set('.vh-basil', { yPercent: -70, opacity: 0 })
-      gsap.set('.vh-sev', { yPercent: -60, rotate: -2.5, opacity: 0, transformOrigin: '50% 50%' })
-      gsap.set('.vh-milk', { scaleY: 0.02, opacity: 0, transformOrigin: '50% 55%' })
-      gsap.set('.vh-cube', { yPercent: -260, opacity: 0, rotate: () => gsap.utils.random(-25, 25), transformOrigin: '50% 50%' })
-      gsap.set('.vh-loose', { yPercent: -150, opacity: 0, rotate: () => gsap.utils.random(-20, 20), transformOrigin: '50% 100%' })
-      gsap.set('.vh-scoop', { yPercent: -75, opacity: 0, transformOrigin: '50% 62%' })
-      gsap.set('.vh-stream', { scaleY: 0, opacity: 0, transformOrigin: '50% 0%' })
-      gsap.set('.vh-logo', { clipPath: 'inset(0 100% 0 0)', x: -18, opacity: 0 })
-      gsap.set('.vh-logo svg', { rotate: -140, scale: 0.3 })
+      gsap.set('.vh-frames', { opacity: 0 })
       gsap.set('.vh-word', { yPercent: 125, rotate: 6 })
       gsap.set('.vh-sub', { y: 26, opacity: 0 })
       gsap.set('.vh-cta .btn', { y: 30, opacity: 0, scale: 0.94 })
@@ -68,15 +65,15 @@ export default function Hero() {
     const mobile = window.innerWidth < 900
     setLight(mobile)
 
-    /* ---------- near layer: glow particles on a canvas ---------- */
-    const cv = canvas.current
+    /* ---------- near layer: glow particles ---------- */
+    const cv = parts.current
     const g2 = cv.getContext('2d')
     const mouse = { x: -9999, y: -9999, nx: 0, ny: 0 }
     let W = 0, H = 0, raf = 0, visible = true
-    const COUNT = still ? 0 : mobile ? 16 : 42
+    const PCOUNT = still ? 0 : mobile ? 14 : 38
     const DPR = Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.75)
-    const palette = ['255,196,150', '255,159,189', '255,244,227', '169,213,139', '255,190,59'] // warm light, rose, cream, pistachio, mango
-    const parts = []
+    const palette = ['255,196,150', '255,159,189', '255,244,227', '169,213,139', '255,190,59']
+    const pts = []
     const size = () => {
       const r = el.getBoundingClientRect()
       W = r.width; H = r.height
@@ -84,9 +81,9 @@ export default function Hero() {
       g2.setTransform(DPR, 0, 0, DPR, 0, 0)
     }
     size()
-    for (let i = 0; i < COUNT; i++) {
+    for (let i = 0; i < PCOUNT; i++) {
       const near = Math.random()
-      parts.push({ x: Math.random() * W, y: Math.random() * H, r: 1 + near * 3.4, z: 0.3 + near, vy: -(0.06 + Math.random() * 0.2) * (0.5 + near), vx: (Math.random() - 0.5) * 0.12, c: palette[(Math.random() * palette.length) | 0], a: 0.2 + near * 0.45, ph: Math.random() * 6.28, ox: 0, oy: 0 })
+      pts.push({ x: Math.random() * W, y: Math.random() * H, r: 1 + near * 3.4, z: 0.3 + near, vy: -(0.06 + Math.random() * 0.2) * (0.5 + near), vx: (Math.random() - 0.5) * 0.12, c: palette[(Math.random() * palette.length) | 0], a: 0.2 + near * 0.45, ph: Math.random() * 6.28, ox: 0, oy: 0 })
     }
     let fade = still ? 1 : 0
     const draw = (t) => {
@@ -94,11 +91,10 @@ export default function Hero() {
       if (!visible) return
       g2.clearRect(0, 0, W, H)
       fade = Math.min(1, fade + 0.006)
-      for (const p of parts) {
+      for (const p of pts) {
         p.x += p.vx + Math.sin(t / 2600 + p.ph) * 0.1 * p.z
         p.y += p.vy
         if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W }
-        // lean away from the cursor, ease back
         const dx = p.x - mouse.x, dy = p.y - mouse.y
         const d = Math.hypot(dx, dy)
         let tx = 0, ty = 0
@@ -115,88 +111,185 @@ export default function Hero() {
         g2.beginPath(); g2.arc(px, py, rr, 0, 6.283); g2.fill()
       }
     }
-    if (COUNT) raf = requestAnimationFrame(draw)
-    const onResize = () => size()
-    window.addEventListener('resize', onResize)
+    if (PCOUNT) raf = requestAnimationFrame(draw)
     const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting), { threshold: 0.01 })
     io.observe(el)
-    cleanups.push(() => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); io.disconnect() })
+    cleanups.push(() => { cancelAnimationFrame(raf); io.disconnect() })
+
+    /* ---------- copy: logo → headline word-by-word → supporting text → buttons ---------- */
+    const reveal = () => {
+      if (revealed.current) return
+      revealed.current = true
+      if (still) return
+      gsap.timeline()
+        .to('.vh-word', { yPercent: 0, rotate: 0, duration: 1.25, stagger: 0.16, ease: 'expo.out' }, 0)
+        .to('.vh-sub', { y: 0, opacity: 1, duration: 1, ease: 'power3.out' }, 0.8)
+        .to('.vh-cta .btn', { y: 0, opacity: 1, scale: 1, duration: 0.9, stagger: 0.14, ease: 'power3.out' }, 1.2)
+    }
+
+    /* ---------- product: frame-sequence player ---------- */
+    const fc = frames.current
+    const fx = fc.getContext('2d')
+    let FW = 0, FH = 0, fdpr = 1
+    let geo = null // placement of the 1920×1080 frame inside the canvas (css px)
+    const layout = () => {
+      FW = fc.offsetWidth; FH = fc.offsetHeight // layout size: unaffected by the scroll scale / parallax transforms above it
+      fdpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2)
+      fc.width = Math.round(FW * fdpr); fc.height = Math.round(FH * fdpr)
+      const portrait = FW / FH < 1.1
+      // never stretched: one uniform scale. Desktop fits ~90% of the height, phones fit the glass and crop the sides.
+      const s = (portrait ? 0.94 : 0.86) * (FH / 1080)
+      const frameW = 1920 * s, frameH = 1080 * s
+      const targetX = portrait ? FW / 2 : FW * 0.735
+      let ox = targetX - GLASS_X * frameW
+      if (portrait) ox = frameW >= FW ? Math.min(0, Math.max(FW - frameW, ox)) : Math.min(FW - frameW, Math.max(0, ox))
+      // desktop: the glass keeps its place right of centre even if the frame's right edge runs past the hero (cropped bokeh only)
+      const oy = portrait ? FH * 0.04 : FH - frameH
+      // the part of the frame that is actually on screen (in source pixels) → decode only that, at output resolution
+      const vx0 = Math.max(0, -ox), vx1 = Math.min(frameW, FW - ox)
+      // soft edges follow the real frame edges (css custom properties used by the mask in CSS), so no photographic rectangle shows
+      fc.style.setProperty('--fx0', ox + 'px'); fc.style.setProperty('--fx1', ox + frameW + 'px'); fc.style.setProperty('--fw', frameW + 'px')
+      fc.style.setProperty('--fy0', oy + 'px'); fc.style.setProperty('--fy1', oy + frameH + 'px'); fc.style.setProperty('--fh', frameH + 'px')
+      fc.style.setProperty('--fb', portrait ? '0.2' : '0.06')
+      geo = { s, ox, oy, sx: Math.floor(vx0 / s), sw: Math.ceil((vx1 - vx0) / s), dx: Math.max(0, ox), dw: vx1 - vx0, dh: frameH }
+    }
+
+    let blobs = new Map() // frame number → Blob (all fetched up front)
+    let cache = new Map() // frame number → ImageBitmap | Promise
+    let alive = true, started = false, done = false
+    let tPlay = 0, lastNow = 0, prx = 0, manual = false
+
+    const decode = (n) => {
+      if (cache.has(n)) return cache.get(n)
+      const blob = blobs.get(n)
+      if (!blob) return null
+      const pr = createImageBitmap(blob, geo.sx, 0, geo.sw, 1080, { resizeWidth: Math.max(2, Math.round(geo.dw * fdpr)), resizeHeight: Math.max(2, Math.round(geo.dh * fdpr)), resizeQuality: 'high' })
+        .then((bm) => { if (alive && cache.get(n) === pr) cache.set(n, bm); else bm.close(); return bm })
+        .catch(() => null)
+      cache.set(n, pr)
+      return pr
+    }
+    const bitmap = (n) => { const v = cache.get(n); return v && typeof v.close === 'function' ? v : null }
+    const window_ = (k) => { // decode a few frames ahead of the playhead, free the ones behind it
+      const keep = new Set()
+      for (let i = Math.max(0, k - 1); i <= Math.min(SEQ.length - 1, k + 6); i++) { keep.add(SEQ[i]); decode(SEQ[i]) }
+      keep.add(SEQ[SEQ.length - 1])
+      for (const [n, v] of cache) if (!keep.has(n)) { if (v && typeof v.close === 'function') v.close(); cache.delete(n) }
+    }
+    const paint = (t) => {
+      let k = 0
+      while (k < SEQ.length - 1 && T[k + 1] <= t) k++
+      const a = k === SEQ.length - 1 ? 0 : Math.min(1, (t - T[k]) / STEP[k]) // linear: a constant-rate dissolve reads as motion, not pulsing
+      window_(k)
+      const A = bitmap(SEQ[k]) || bitmap(SEQ[Math.max(0, k - 1)])
+      fx.clearRect(0, 0, fc.width, fc.height)
+      if (!A) return false
+      const dx = geo.dx * fdpr, dy = geo.oy * fdpr, dw = geo.dw * fdpr, dh = geo.dh * fdpr
+      fx.globalAlpha = 1
+      fx.drawImage(A, dx, dy, dw, dh)
+      const B = a > 0.003 ? bitmap(SEQ[k + 1]) : null
+      if (B) { fx.globalAlpha = a; fx.drawImage(B, dx, dy, dw, dh); fx.globalAlpha = 1 }
+      return true
+    }
+    const tick = (now) => {
+      if (!alive) return
+      frameRaf = requestAnimationFrame(tick)
+      if (manual) return
+      const dt = Math.min(0.1, (now - lastNow) / 1000) // a tab that was asleep must not skip the show
+      lastNow = now
+      if (!visible) return
+      tPlay += dt
+      const t = Math.min(DURATION, tPlay)
+      paint(t)
+      if (tPlay >= REVEAL_AT) reveal()
+      if (tPlay >= DURATION + 0.2) {
+        done = true // hold the final frame: no loop (a dessert vanishing back to an empty glass looks unnatural)
+        paint(DURATION)
+        cancelAnimationFrame(frameRaf)
+        // a very slow "breathing" so the held frame is not dead
+        gsap.to('.vh-breathe', { scale: 1.018, duration: 9, ease: 'sine.inOut', repeat: -1, yoyo: true })
+      }
+    }
+    let frameRaf = 0
+    const fetchBlob = (n) => fetch(frameUrl(n)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status))))).then((b) => blobs.set(n, b))
+
+    const start = async () => {
+      layout()
+      if (still) {
+        // reduced motion / fallback: just the final frame, as a static image
+        await fetchBlob(FINAL)
+        const bm = await decode(FINAL)
+        if (alive && bm) { cache.set(FINAL, bm); const dx = geo.dx * fdpr; fx.drawImage(bm, dx, geo.oy * fdpr, geo.dw * fdpr, geo.dh * fdpr) }
+        revealed.current = true
+        return
+      }
+      try {
+        await Promise.all(SEQ.map(fetchBlob)) // preload every frame before starting
+        if (!alive) return
+        await Promise.all(SEQ.slice(0, 8).map(decode))
+        if (!alive) return
+        started = true
+        paint(0)
+        gsap.to('.vh-frames', { opacity: 1, duration: 0.8, ease: 'power2.out' })
+        lastNow = performance.now()
+        frameRaf = requestAnimationFrame(tick)
+      } catch {
+        // fallback: the final frame, still
+        try {
+          await fetchBlob(FINAL)
+          const bm = await decode(FINAL)
+          if (alive && bm) { fx.drawImage(bm, geo.dx * fdpr, geo.oy * fdpr, geo.dw * fdpr, geo.dh * fdpr); gsap.to('.vh-frames', { opacity: 1, duration: 0.6 }) }
+        } catch { /* nothing more we can do: the code-built background and the copy still show */ }
+        reveal()
+      }
+    }
+    start()
+    // never leave the page without its headline if loading is slow
+    const safety = setTimeout(reveal, 9000)
+    let lw = window.innerWidth, lh = window.innerHeight
+    const onResize = () => {
+      // phones fire resize when the address bar slides: ignore small height changes
+      if (window.innerWidth === lw && Math.abs(window.innerHeight - lh) < 140) return
+      lw = window.innerWidth; lh = window.innerHeight
+      size()
+      if (!geo) return
+      layout()
+      for (const [, v] of cache) if (v && typeof v.close === 'function') v.close()
+      cache = new Map()
+      if (started || still) {
+        const t = done ? DURATION : Math.min(DURATION, tPlay)
+        Promise.all([decode(SEQ[SEQ.length - 1])]).then(() => paint(t))
+        window_(0)
+      }
+    }
+    window.addEventListener('resize', onResize)
+    cleanups.push(() => { alive = false; clearTimeout(safety); cancelAnimationFrame(frameRaf); window.removeEventListener('resize', onResize); for (const [, v] of cache) if (v && typeof v.close === 'function') v.close(); cache = new Map(); blobs = new Map() })
 
     if (still) return () => cleanups.forEach((f) => f())
 
     /* ---------- far + mid layers: slow, endless motion ---------- */
     const ctx = gsap.context(() => {
       gsap.utils.toArray('.vh-blob').forEach((b, i) => {
-        gsap.to(b, { x: `random(-90, 90)`, y: `random(-60, 60)`, scale: `random(0.9, 1.25)`, duration: 16 + i * 4, ease: 'sine.inOut', repeat: -1, yoyo: true, repeatRefresh: true })
+        gsap.to(b, { x: 'random(-90, 90)', y: 'random(-60, 60)', scale: 'random(0.9, 1.25)', duration: 16 + i * 4, ease: 'sine.inOut', repeat: -1, yoyo: true, repeatRefresh: true })
       })
       gsap.utils.toArray('.vh-rib path').forEach((p, i) => {
         gsap.to(p, { attr: { d: RIBBONS[i].b }, duration: RIBBONS[i].d, ease: 'sine.inOut', repeat: -1, yoyo: true })
       })
       gsap.to('.vh-glow', { scale: 1.08, duration: 5, ease: 'sine.inOut', repeat: -1, yoyo: true })
-      gsap.to('.vh-float', { y: -12, duration: 3.6, ease: 'sine.inOut', repeat: -1, yoyo: true })
+      gsap.to('.vh-bgfar', { opacity: 1, duration: 1.4, ease: 'power2.out' })
+      gsap.to('.vh-bgmid', { opacity: 1, duration: 1.8, ease: 'power2.out', delay: 0.2 })
+      gsap.to('.vh-glow', { opacity: 1, duration: 1.6, ease: 'power2.out', delay: 0.4 })
     }, el)
     cleanups.push(() => ctx.revert())
 
-    /* ---------- the opening: the Falooda is built over the background, then the copy ---------- */
-    const intro = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: 'none' } })
-      tl.to('.vh-bgfar', { opacity: 1, duration: 1.4, ease: 'power2.out' }, 0)
-        .to('.vh-bgmid', { opacity: 1, duration: 1.8, ease: 'power2.out' }, 0.2)
-        .to('.vh-glow', { opacity: 1, duration: 1.6, ease: 'power2.out' }, 0.5)
-        // 1 — the empty glass rises (translate, rotate, 3D tilt, scale)
-        .to('.vh-prod', { yPercent: 0, scale: 1, rotate: 0, rotationX: 0, opacity: 1, duration: 1.7, ease: 'expo.out' }, 0.5)
-        // 2 — rose syrup: a thick stream pours in and the syrup layer swells up from the bottom of the glass
-        .to('.vh-stream.sy', { scaleY: 1, opacity: 1, duration: 0.45, ease: 'power1.in' }, 1.5)
-        .to('.vh-syrup', { scaleY: 1, opacity: 1, duration: 1.1, ease: 'power2.out' }, 1.8)
-        .to('.vh-stream.sy', { opacity: 0, duration: 0.35 }, 2.5)
-        // 3 — basil seeds drop and sink into place
-        .to('.vh-basil', { yPercent: 0, opacity: 1, duration: 0.75, ease: 'power2.in' }, 2.6)
-        .to('.vh-basil', { yPercent: -1.5, duration: 0.12, ease: 'power1.out' }, 3.35)
-        .to('.vh-basil', { yPercent: 0, duration: 0.14, ease: 'power1.in' }, 3.47)
-        // 4 — falooda sev drops in as a tangle and lands
-        .to('.vh-sev', { yPercent: 0, rotate: 0, opacity: 1, duration: 0.8, ease: 'power2.in' }, 3.2)
-        .to('.vh-sev', { yPercent: -1.2, duration: 0.1, ease: 'power1.out' }, 4.0)
-        .to('.vh-sev', { yPercent: 0, duration: 0.12, ease: 'power1.in' }, 4.1)
-        // 5 — milk: a cream stream, then the milk layer fills upward through everything below
-        .to('.vh-stream.mk', { scaleY: 1, opacity: 1, duration: 0.45, ease: 'power1.in' }, 4.0)
-        .to('.vh-milk', { scaleY: 1, opacity: 1, duration: 1.4, ease: 'power1.inOut' }, 4.35)
-        .to('.vh-stream.mk', { opacity: 0, duration: 0.35 }, 5.3)
-        // 6 — jelly cubes fall in one after another, each with its own squash on landing
-        .to('.vh-cube', { yPercent: 0, opacity: 1, rotate: 0, duration: 0.7, stagger: 0.14, ease: 'power2.in' }, 5.5)
-        .to('.vh-cube', { scaleY: 0.86, scaleX: 1.08, duration: 0.07, stagger: 0.14, ease: 'power1.out' }, 6.2)
-        .to('.vh-cube', { scaleY: 1, scaleX: 1, duration: 0.2, stagger: 0.14, ease: 'power1.inOut' }, 6.27)
-        // 7 — strawberries and the loose jelly cubes tumble down beside the glass and bounce once
-        .to('.vh-loose', { yPercent: 0, opacity: 1, rotate: 0, duration: 0.75, stagger: 0.12, ease: 'power2.in' }, 6.4)
-        .to('.vh-loose', { yPercent: -7, duration: 0.15, stagger: 0.12, ease: 'power1.out' }, 7.15)
-        .to('.vh-loose', { yPercent: 0, duration: 0.18, stagger: 0.12, ease: 'power1.in' }, 7.3)
-        // 8 — the ice-cream scoop drops onto the top, squashes, settles
-        .to('.vh-scoop', { yPercent: 0, opacity: 1, duration: 0.8, ease: 'power2.in' }, 7.3)
-        .to('.vh-scoop', { scaleY: 0.93, scaleX: 1.04, duration: 0.08, ease: 'power1.out' }, 8.1)
-        .to('.vh-scoop', { scaleY: 1.02, scaleX: 0.99, duration: 0.12, ease: 'power1.out' }, 8.18)
-        .to('.vh-scoop', { scaleY: 1, scaleX: 1, duration: 0.16, ease: 'power1.inOut' }, 8.3)
-        // 4 — copy, strictly in order, once the dessert is finished
-        .to('.vh-logo', { clipPath: 'inset(0 0% 0 0)', x: 0, opacity: 1, duration: 1.1, ease: 'expo.out' }, 8.3)
-        .to('.vh-logo svg', { rotate: 0, scale: 1, duration: 1.2, ease: 'expo.out' }, 8.3)
-        .to('.vh-word', { yPercent: 0, rotate: 0, duration: 1.25, stagger: 0.16, ease: 'expo.out' }, 8.8)
-        .to('.vh-sub', { y: 0, opacity: 1, duration: 1, ease: 'power3.out' }, 9.7)
-        .to('.vh-cta .btn', { y: 0, opacity: 1, scale: 1, duration: 0.9, stagger: 0.14, ease: 'power3.out' }, 10.1)
-      // anything the visitor does fast-forwards the opening
-      const skip = () => tl.timeScale(5)
-      ;['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach((e) => window.addEventListener(e, skip, { passive: true, once: true }))
-      cleanups.push(() => ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach((e) => window.removeEventListener(e, skip)))
-      tl.timeScale(2.0)
-      if (import.meta.env.DEV) { window.__hero = { tl }; if (new URLSearchParams(window.location.search).has('hold')) tl.pause() } // dev-only: step frames
-    }, el)
-    cleanups.push(() => intro.revert())
-
-    /* ---------- scroll: pin, scale the product toward the camera, wash plum → cream ---------- */
+    /* ---------- scroll: pin, scale the product toward the camera; the next section rises over the hero ---------- */
     const sc = gsap.context(() => {
       const tl = gsap.timeline({
         defaults: { ease: 'none' },
-        scrollTrigger: { trigger: el, start: 'top top', end: () => `+=${Math.round(window.innerHeight * (mobile ? 0.55 : 0.75))}`, pin: true, pinSpacing: false, scrub: 0.8, anticipatePin: 1, invalidateOnRefresh: true }, // pinSpacing off: the next section rises over the pinned hero (no empty screen)
+        scrollTrigger: { trigger: el, start: 'top top', end: () => `+=${Math.round(window.innerHeight * (mobile ? 0.55 : 0.75))}`, pin: true, pinSpacing: false, scrub: 0.8, anticipatePin: 1, invalidateOnRefresh: true },
       })
       tl.to('.vh-copy', { y: -90, opacity: 0, duration: 0.5, ease: 'power2.in' }, 0)
-        .to('.vh-scale', { scale: mobile ? 1.25 : 1.4, y: mobile ? 0 : 30, duration: 1, transformOrigin: '50% 60%' }, 0)
+        .to('.vh-scale', { scale: mobile ? 1.18 : 1.3, y: mobile ? 0 : 20, duration: 1, transformOrigin: mobile ? '50% 60%' : '70% 70%' }, 0)
         .to('.vh-bgfar', { yPercent: -10, scale: 1.12, duration: 1 }, 0)
         .to('.vh-bgmid', { yPercent: -16, duration: 1 }, 0)
     }, el)
@@ -205,7 +298,7 @@ export default function Hero() {
     /* ---------- cursor parallax: each layer moves a different amount ---------- */
     if (finePointer()) {
       const q = (s, d) => [gsap.quickTo(s, 'x', { duration: d, ease: 'power3.out' }), gsap.quickTo(s, 'y', { duration: d, ease: 'power3.out' })]
-      const far = q('.vh-bgfar', 2), mid = q('.vh-bgmid', 1.6), glow = q('.vh-glow', 1.4), prod = q('.vh-parallax', 1.2), near = q('.vh-near', 1), copy = q('.vh-grid', 1.2)
+      const far = q('.vh-bgfar', 2), mid = q('.vh-bgmid', 1.6), glow = q('.vh-glow', 1.4), prod = q('.vh-parallax', 1.2), copy = q('.vh-grid', 1.2)
       const move = (e) => {
         const r = el.getBoundingClientRect()
         mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top
@@ -215,8 +308,7 @@ export default function Hero() {
         far[0](-nx * 24); far[1](-ny * 16)
         mid[0](-nx * 46); mid[1](-ny * 30)
         glow[0](-nx * 70); glow[1](-ny * 50)
-        prod[0](nx * 14); prod[1](ny * 9)
-        near[0](nx * 18); near[1](ny * 10) // foreground pieces move more than the glass: depth
+        prod[0](nx * 12); prod[1](ny * 8)
         copy[0](nx * 8); copy[1](ny * 5)
       }
       const leave = () => { mouse.x = mouse.y = -9999 }
@@ -224,6 +316,18 @@ export default function Hero() {
       el.addEventListener('pointerleave', leave)
       cleanups.push(() => { window.removeEventListener('pointermove', move); el.removeEventListener('pointerleave', leave) })
     }
+    void prx
+    if (import.meta.env.DEV) window.__hero = {
+        get t() { return tPlay }, get done() { return done }, get decoded() { return [...cache.values()].filter((v) => v && typeof v.close === "function").length }, duration: DURATION, seq: SEQ, skip: [...SKIP], steps: STEP,
+        // deterministic rendering for verification: pause the clock, decode what is needed, paint exactly time t
+        seek: async (t) => {
+          manual = true
+          let k = 0
+          while (k < SEQ.length - 1 && T[k + 1] <= t) k++
+          await Promise.all([decode(SEQ[k]), decode(SEQ[Math.min(SEQ.length - 1, k + 1)])])
+          return paint(t)
+        },
+      }
     return () => cleanups.forEach((f) => f())
   }, [still])
 
@@ -244,52 +348,23 @@ export default function Hero() {
       </svg>
       <div className="vh-glow" aria-hidden="true" />
       {/* near: particles */}
-      <canvas className="vh-parts" ref={canvas} aria-hidden="true" />
+      <canvas className="vh-parts" ref={parts} aria-hidden="true" />
 
-      {/* product — separate transparent layers (cut from photographs), built step by step in front of the background */}
+      {/* product: the photographic frame sequence, drawn on a canvas */}
       <div className="vh-stage" aria-hidden="true">
         <div className="vh-parallax">
           <div className="vh-scale">
-            <div className="vh-prod">
-              <div className="vh-float">
-                <div className="vh-shadow" />
-                <div className="vh-liq" style={{ clipPath: FILL_CLIP }}>
-                  <img className="vh-l vh-syrup" src={LAYER('syrup')} alt="" decoding="async" />
-                  <img className="vh-l vh-basil" src={LAYER('basil')} alt="" decoding="async" />
-                  <img className="vh-l vh-sev" src={LAYER('sev')} alt="" decoding="async" />
-                  <img className="vh-l vh-milk" src={LAYER('milk')} alt="" decoding="async" />
-                  {CUBES.map((c) => (
-                    <img key={c.f} className="vh-p vh-cube" src={LAYER(c.f)} alt="" decoding="async" style={css(c.style)} />
-                  ))}
-                </div>
-                <i className="vh-stream sy" />
-                <i className="vh-stream mk" />
-                <img className="vh-l vh-glass" src={LAYER('glass')} alt="" decoding="async" fetchPriority="high" />
-                <div className="vh-near">
-                  {LOOSE.map((c) => (
-                    <img key={c.f} className="vh-p vh-loose" src={LAYER(c.f)} alt="" decoding="async" style={css(c.style)} />
-                  ))}
-                </div>
-                <img className="vh-l vh-scoop" src={LAYER('scoop')} alt="" decoding="async" />
-              </div>
+            <div className="vh-breathe">
+              <canvas className="vh-frames" ref={frames} />
             </div>
           </div>
         </div>
+        <div className="vh-grade" />
       </div>
       <div className="vh-shade" aria-hidden="true" />
 
       <div className="wrap vh-grid">
         <div className="vh-copy">
-          <p className="vh-logo" aria-label="LUMA">
-            <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
-              <path d="M5 6h22l-4 13c-1 3-4 5-7 5s-6-2-7-5z" fill="#fff" fillOpacity=".25" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-              <path d="M7 12h18l-1.4 5c-.8 2.6-3.7 4.4-7.6 4.4S9.2 19.6 8.4 17z" fill="#F0709B" />
-              <path d="M8.6 17h14.8c-.9 2.6-3.7 4.4-7.4 4.4S9.5 19.6 8.6 17z" fill="#A9D58B" />
-              <circle cx="16" cy="5" r="3" fill="#FFBE3B" />
-              <path d="M16 24v5M11 29h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
-            <span>LUMA</span>
-          </p>
           <h1 aria-label="Layers of Happiness.">
             <span className="vh-line" aria-hidden="true">
               <span className="vh-mask"><span className="vh-word">Layers</span></span>{' '}
@@ -309,7 +384,6 @@ export default function Hero() {
           </div>
         </div>
       </div>
-
     </section>
   )
 }
