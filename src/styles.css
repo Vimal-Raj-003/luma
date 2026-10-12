@@ -609,3 +609,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .cb-send:hover:not(:disabled) { background: var(--plum); }
 .cb-send:active:not(:disabled) { transform: scale(0.93); }
 .cb-send:disabled { opacity: 0.4; cursor: default; }
+
+/* Add to Cart, secondary to Order Now. It sits to the LEFT of Order Now visually, but after it in the markup, so the card's reveal animation (which targets the first .btn) is unchanged. */
+.card-btns { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.card-btns .atc { order: -1; }
+.hx-cta .atc { order: -1; }
+.atc.ok { background: var(--pista-l); border-color: transparent; color: #2f5a23; }
+.hx-cta .atc.ok { background: rgba(169, 213, 139, 0.9); color: #1f3d17; border-color: transparent; }
+@media (max-width: 380px) { .card-btns { width: 100%; justify-content: stretch; } .card-btns .btn { flex: 1 1 0; padding-inline: 0.6rem; } }
+/* hero on phones: three CTAs wrap to two rows, so the glass and buttons give back a little height to keep the selector in the first screen */
+@media (max-width: 599px) { .hx-art { --ah: min(32svh, 330px); } .hx-cta { gap: 8px; } .hx-cta .btn { min-height: 46px; padding-inline: 1.2rem; } }
+/* card buttons: always side by side from 640px up (below that the card is a narrow two-column tile, so they may stack) */
+@media (min-width: 640px) { .card-btns { flex-wrap: nowrap; } }

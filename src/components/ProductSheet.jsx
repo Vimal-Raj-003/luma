@@ -28,7 +28,6 @@ export function burst(btn) {
 export default function ProductSheet({ f, onClose }) {
   const root = useRef(null)
   const [qty, setQty] = useState(1)
-  const [added, setAdded] = useState(false)
   const store = useStore()
   const wished = store.wish.includes(f.id)
   const closing = useRef(false)
@@ -69,11 +68,12 @@ export default function ProductSheet({ f, onClose }) {
     return () => { ctx.revert(); window.removeEventListener('keydown', key); lockScroll(false); prev?.focus?.() }
   }, [])
 
-  const add = () => {
+  // Buy Now: this product and quantity go into the existing cart, the sheet closes and the existing cart / checkout panel opens
+  const buy = () => {
     addToCart(f.id, qty)
-    setAdded(true)
-    if (!prefersReduced()) gsap.fromTo('.ps-add', { scale: 0.94 }, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' })
-    setTimeout(() => setAdded(false), 1800)
+    closing.current = true
+    onClose()
+    window.dispatchEvent(new Event('luma:cart'))
   }
   const heart = (e) => {
     toggleWish(f.id)
@@ -104,9 +104,7 @@ export default function ProductSheet({ f, onClose }) {
             </div>
           </div>
           <div className="ps-actions">
-            <button className={`btn btn-rose ps-add${added ? ' ok' : ''}`} onClick={add}>
-              {added ? '✓ Added to cart' : 'Add to cart'}
-            </button>
+            <button className="btn btn-rose ps-add" onClick={buy}>Buy Now</button>
             <button className="card-heart ps-heart" aria-pressed={wished} aria-label={wished ? 'Remove from wishlist' : 'Save to wishlist'} onClick={heart}><Heart /></button>
           </div>
         </div>

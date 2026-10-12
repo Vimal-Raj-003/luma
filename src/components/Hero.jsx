@@ -5,6 +5,7 @@ import { ING } from './Ingredients'
 import { FLAVOUR_BG, FLAVOUR_IMG } from './PhotoGlass'
 import { OUT_H } from './glassWarp'
 import { FLAVOURS, HERO_COPY, SELECTOR, SITE } from '../data/site'
+import AddToCart from './AddToCart'
 import { finePointer, prefersReduced } from '../hooks/motion'
 
 /*
@@ -232,6 +233,7 @@ export default function Hero() {
             <a className="btn btn-rose" href={SITE.contact.orderHref}>
               Order Now
             </a>
+            <AddToCart id={id} name={FLAVOURS.find((x) => x.id === id)?.name || f.title} className="btn btn-glass" />
             <a className="btn btn-glass" href="#flavours">
               Explore Flavours
               <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
