@@ -3,6 +3,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Nav from './components/Nav'
 import Hero from './components/Hero'
 import MotionNotice from './components/MotionNotice'
+import Chatbot from './components/Chatbot'
 import { useMicro } from './hooks/motion'
 import { preloadAssets } from './assets'
 
@@ -53,6 +54,7 @@ export default function App() {
         )}
       </main>
       <MotionNotice />
+      <Chatbot />
     </>
   )
 }

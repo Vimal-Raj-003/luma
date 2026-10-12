@@ -9,7 +9,6 @@ import FAQ from './FAQ'
 import OneGlass from './OneGlass'
 import FreshlyMade from './FreshlyMade'
 import CtaScene from './CtaScene'
-import Story from './Story'
 import Visit from './Visit'
 import Footer from './Footer'
 import { useMicro } from '../hooks/motion'
@@ -38,7 +37,6 @@ export default function Below() {
       <Flavours />
       <OneGlass />
       <FreshlyMade />
-      <Story />
       <WhyLuma />
       <Signature />
       <Testimonials />
