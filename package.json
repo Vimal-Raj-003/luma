@@ -4,14 +4,13 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "ing:cutouts": "node tools/make-ingredient-cutouts.mjs",
+    "flavours:build": "node tools/make-flavour-visuals.mjs",
+    "frames:falooda": "node tools/make-falooda-frames.mjs",
     "frame:empty": "node tools/make-empty-frame.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "assets": "node tools/make-assets.mjs",
-    "hero:render": "node tools/render-hero.mjs",
-    "photos:prep": "node tools/prep-photos.mjs",
     "layers": "node tools/make-layers.mjs"
   },
   "dependencies": {

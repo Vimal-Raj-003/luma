@@ -23,23 +23,30 @@ export const SITE = {
 
 export const FLAVOURS = [
   {
+    id: 'strawberry',
+    name: 'Strawberry Falooda',
+    desc: 'Fresh strawberry, rosy milk and a berry scoop. Bright, juicy and cool.',
+    price: 199,
+    glow: '#FF5676',
+  },
+  {
     id: 'rose',
     name: 'Royal Rose Falooda',
-    desc: 'Rose syrup, chilled milk and silky vanilla — the classic, crowned.',
+    desc: 'Delicate rose syrup, chilled milk and silky vanilla ice cream, finished with fragrant petals.',
     price: 189,
     glow: '#F0709B',
   },
   {
     id: 'mango',
     name: 'Mango Falooda',
-    desc: 'Sun-ripe mango, saffron-warm milk and a golden mango scoop.',
+    desc: 'Sun-ripened mango, saffron-warmed milk and a golden mango scoop.',
     price: 199,
     glow: '#FFB627',
   },
   {
     id: 'pistachio',
     name: 'Pistachio Falooda',
-    desc: 'Roasted pistachio cream over basil seeds and cool green syrup.',
+    desc: 'Roasted pistachio cream layered with basil seeds, falooda sev and chilled milk.',
     price: 219,
     glow: '#8CC76E',
   },
@@ -53,16 +60,9 @@ export const FLAVOURS = [
   {
     id: 'dryfruit',
     name: 'Dry Fruit Falooda',
-    desc: 'Almonds, cashews and pistachio folded into kesar-kissed layers.',
+    desc: 'Almonds, cashews and pistachio in kesar-infused layers with a golden finish.',
     price: 239,
     glow: '#E8A63C',
-  },
-  {
-    id: 'strawberry',
-    name: 'Strawberry Falooda',
-    desc: 'Fresh strawberry, rosy milk and a berry scoop. Bright and cool.',
-    price: 199,
-    glow: '#FF5676',
   },
 ]
 
@@ -81,7 +81,7 @@ export const SELECTOR = {
     label: 'Pistachio',
     title: 'Pistachio Cream',
     line: 'Nutty, cool and quietly luxurious.',
-    notes: ['Roasted pistachio', 'Green syrup', 'Basil seeds'],
+    notes: ['Roasted pistachio', 'Pistachio cream', 'Basil seeds'],
     bg: '#E5F2D3',
     ink: '#2C3A1E',
     accent: '#7FB76A',
@@ -125,9 +125,19 @@ export const SELECTOR = {
 }
 
 export const REVIEWS = [
-  { quote: 'Perfect balance of creamy and refreshing.', who: 'Guest review', tag: 'Royal Rose' },
-  { quote: 'Best Royal Falooda I’ve had.', who: 'Guest review', tag: 'Royal Rose' },
-  { quote: 'Every spoonful is a different layer. Nothing is too sweet.', who: 'Guest review', tag: 'Pistachio' },
-  { quote: 'The mango one tastes like a sunny afternoon.', who: 'Guest review', tag: 'Mango' },
-  { quote: 'Beautiful to look at, even better to finish.', who: 'Guest review', tag: 'Signature' },
+  { quote: 'The perfect balance of creamy and refreshing.', who: 'Guest review', tag: 'Royal Rose' },
+  { quote: 'The best falooda I have had. Elegant and never too sweet.', who: 'Guest review', tag: 'Royal Rose' },
+  { quote: 'Every spoonful is a different layer, and every layer is balanced.', who: 'Guest review', tag: 'Pistachio' },
+  { quote: 'The mango falooda tastes like a sunny afternoon.', who: 'Guest review', tag: 'Mango' },
+  { quote: 'Beautiful to look at, and even better to finish.', who: 'Guest review', tag: 'Signature' },
 ]
+
+// Hero showcase copy per flavour (title / notes / colours come from SELECTOR, price from FLAVOURS)
+export const HERO_COPY = {
+  strawberry: 'Bright, juicy, and cool. Berries layered with creamy Falooda for a refreshing finish.',
+  rose: 'Delicate rose syrup folded through chilled milk and silky ice cream, finished with fragrant petals.',
+  mango: 'Sun-ripened mango and a hint of saffron, layered with creamy Falooda for a golden, refreshing finish.',
+  pistachio: 'Roasted pistachio cream layered with basil seeds and silky sev for a smooth, nutty finish.',
+  chocolate: 'Dark cocoa ribbons and velvety chocolate ice cream, layered into a rich, indulgent Falooda.',
+  dryfruit: 'Almonds, cashews and pistachio in kesar-infused layers: a rich, traditional Falooda with a golden finish.',
+}

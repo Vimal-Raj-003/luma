@@ -48,12 +48,19 @@ export default function Nav() {
   const [solid, setSolid] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [dark, setDark] = useState(false)
+  const [heroDark, setHeroDark] = useState(false) // the hero's current flavour has a dark background
+  useEffect(() => {
+    const on = () => setHeroDark(!!window.__heroDark)
+    on()
+    window.addEventListener('luma:hero-tone', on)
+    return () => window.removeEventListener('luma:hero-tone', on)
+  }, [])
   const links = useRef(null)
   const ind = useRef(null)
 
   useEffect(() => {
     let raf = 0
-    const SECTIONS = ['#mood', '#visit']
+    const SECTIONS = ['#flavours', '#visit']
     const on = () => {
       const y = window.scrollY
       setScrolled(y > 24)
@@ -83,11 +90,11 @@ export default function Nav() {
   }, [])
 
   return (
-    <header className={`nav${solid && !dark ? ' solid' : ' on-dark'}${scrolled ? ' scrolled' : ''}`}>
+    <header className={`nav${solid && !dark ? ' solid' : dark || heroDark ? ' on-dark' : ''}${scrolled ? ' scrolled' : ''}`}>
       <div className="nav-in">
         <Logo />
         <nav className="nav-links" aria-label="Primary" ref={links}>
-          <a href="#mood">Flavours</a>
+          <a href="#flavours">Flavours</a>
           <a href="#visit">Visit</a>
           <span className="nav-ind" ref={ind} aria-hidden="true" />
         </nav>

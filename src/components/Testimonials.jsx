@@ -42,7 +42,7 @@ export default function Testimonials() {
     <section className="section reviews" id="reviews">
       <div className="wrap">
         <div className="rev-head">
-          <SectionHead eyebrow="Kind words" title={<>Loved, <em>layer by layer.</em></>} />
+          <SectionHead eyebrow="Guest reviews" title={<>Loved, <em>layer by layer.</em></>} />
           <div className="rev-nav">
             <button onClick={() => go(-1)} aria-label="Previous review">
               <svg viewBox="0 0 20 20" width="18" height="18"><path d="M12 4l-6 6 6 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>

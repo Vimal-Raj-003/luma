@@ -3,23 +3,24 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ING } from './Ingredients'
 import { prefersReduced, splitWords } from '../hooks/motion'
+import { OUT_H } from './glassWarp'
 
 gsap.registerPlugin(ScrollTrigger)
 
 const BASE = import.meta.env.BASE_URL
-const frameUrl = (n) => `${BASE}hero-frames/ezgif-frame-${String(n).padStart(3, '0')}.jpg`
+const frameUrl = (n) => `${BASE}hero-frames-v2/ezgif-frame-${String(n).padStart(3, '0')}.jpg`
 // the same photographic build as the hero (0 = empty glass … 30 = finished), minus the frames with double-exposure defects
-const SKIP = new Set([13, 14, 15, 16, 29])
+const SKIP = new Set([11, 12, 13, 14, 15, 16, 17, 29])
 const SEQ = [0, ...Array.from({ length: 30 }, (_, i) => i + 1).filter((n) => !SKIP.has(n))]
-const CROP = { x: 780, w: 800, h: 1080 } // the glass column of the 1920×1080 frame
+const CROP = { x: 780, w: 800, h: OUT_H } // the glass column of the 1920×1080 frame
 
 // source-frame ranges of each stage of the build (read off the sequence)
 const STEPS = [
-  { k: 'syrup', label: 'Syrup swirl', text: 'Rose-red syrup swirls into the bottom of a chilled glass.', to: 5 },
-  { k: 'milk', label: 'Milk pour', text: 'Cold milk is poured over, folding into the syrup.', to: 12 },
-  { k: 'fruit', label: 'Jelly & fruit', text: 'Ruby jelly, basil seeds and fruit pieces tumble through.', to: 20 },
-  { k: 'scoop', label: 'Ice cream scoop', text: 'A slow-churned scoop lands on top.', to: 26 },
-  { k: 'top', label: 'Nuts & toppings', text: 'Crowned with nuts, petals and fresh berries.', to: 30 },
+  { k: 'syrup', label: 'Syrup', text: 'Rich syrup is swirled into the base of a chilled glass.', to: 5 },
+  { k: 'milk', label: 'Chilled milk', text: 'Cold milk is poured slowly, folding into the syrup.', to: 12 },
+  { k: 'fruit', label: 'Jelly & fruit', text: 'Jelly, basil seeds, falooda sev and fruit settle into layers.', to: 20 },
+  { k: 'scoop', label: 'Ice cream', text: 'A slow-churned scoop is set on top.', to: 26 },
+  { k: 'top', label: 'Finishing touches', text: 'Nuts, petals and fresh fruit complete the glass.', to: 30 },
 ]
 const stepAt = (src) => STEPS.findIndex((s) => src <= s.to)
 
@@ -141,7 +142,7 @@ export default function FreshlyMade() {
       <div className="fm-bg" aria-hidden="true"><i /><i /></div>
       <div className="wrap fm-wrap">
         <div className="fm-head">
-          <p className="eyebrow light">The making</p>
+          <p className="eyebrow light">The craft</p>
           <h2 className="h2 fm-title" data-split>Freshly Made. <em>Layer by Layer.</em></h2>
         </div>
         <ol className="fm-steps" aria-label="How it is made">

@@ -8,7 +8,7 @@ import { prefersReduced, splitWords } from '../hooks/motion'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const SPR = [[ING.berry, 12, 30, 84, 1.4], [ING.petal, 84, 22, 64, 2], [ING.pistachio, 22, 64, 56, 1.8], [ING.jelly, 76, 58, 66, 1.1], [ING.cherry, 60, 14, 46, 1.6], [ING.almond, 90, 74, 58, 1.3]]
+const SPR = [[ING.berry, 12, 30, 84, 1.4], [ING.petal, 84, 22, 64, 2], [ING.pistachio, 22, 64, 56, 1.8], [ING.jelly, 76, 58, 66, 1.1], [ING.berry, 60, 14, 46, 1.6], [ING.almond, 90, 74, 58, 1.3]]
 
 /*
   "Your Next Craving Starts Here." — the finale. The glass rises out of the bottom of the scene as you arrive (scrubbed, scale + lift),
@@ -48,9 +48,9 @@ export default function CtaScene() {
         <div className="cta-sp" key={i} data-sp={sp} style={{ left: `${x}%`, top: `${y}%`, width: s }} aria-hidden="true"><div className="float" style={{ '--fy': `${8 + i * 2}px`, '--dur': `${5 + i * 0.7}s`, '--delay': `${i * -0.8}s` }}><C /></div></div>
       ))}
       <div className="wrap cta-in">
-        <p className="eyebrow light cta-eyebrow">Ready when you are</p>
+        <p className="eyebrow light cta-eyebrow">Order today</p>
         <h2 className="h2 cta-title" data-split>Your Next Craving <em>Starts Here.</em></h2>
-        <p className="cta-sub">Creamy. Colourful. Refreshingly unforgettable.</p>
+        <p className="cta-sub">Fresh ingredients. Balanced taste. A Falooda worth coming back for.</p>
         <div className="cta-btns">
           <a className="btn btn-rose" href={SITE.contact.orderHref}>Order Now</a>
           <a className="btn btn-glass" href="#flavours">Explore Flavours</a>

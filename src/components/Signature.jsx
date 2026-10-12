@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { prefersReduced, splitWords } from '../hooks/motion'
+import PhotoGlass from './PhotoGlass'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -28,11 +29,11 @@ export default function Signature() {
           invalidateOnRefresh: true,
         },
       })
-      tl.fromTo('.sg-photo', { scale: 0.62, y: 120, rotate: -2.5, borderRadius: 120 }, { scale: 1, y: 0, rotate: 0, borderRadius: 32, duration: 1 }, 0)
-        .fromTo('.sg-photo img', { scale: 1.25 }, { scale: 1, duration: 1.4 }, 0)
+      tl.fromTo('.sg-photo', { scale: 0.62, y: 120, rotate: -2.5 }, { scale: 1, y: 0, rotate: 0, duration: 1 }, 0)
+        .fromTo('.sg-photo .pg', { scale: 1.12 }, { scale: 1, duration: 1.4 }, 0)
         .fromTo('.sg-ring', { scale: 0.4, opacity: 0.1 }, { scale: 1.2, opacity: 1, duration: 1 }, 0)
         .fromTo('.sg-title .wi', { yPercent: 115 }, { yPercent: 0, stagger: 0.06, duration: 0.5, ease: 'power3.out' }, 0.05)
-        .to('.sg-photo img', { scale: 1.06, duration: 0.5 }, 1)
+        .to('.sg-photo .pg', { scale: 1.04, duration: 0.5 }, 1)
     }, el)
     return () => ctx.revert()
   }, [])
@@ -50,14 +51,14 @@ export default function Signature() {
         <div className="sg-copy">
           <p className="eyebrow light">The signature</p>
           <h2 className="h2 sg-title" ref={title}>
-            Not Just a Drink. <br />
-            <em>It’s a Dessert Experience.</em>
+            Crafted in Layers. <br />
+            <em>Made to Be Remembered.</em>
           </h2>
         </div>
         <div className="sg-stage">
           <div className="sg-ring" aria-hidden="true" />
           <div className="sg-photo">
-            <img src={`${import.meta.env.BASE_URL}assets/photo/final.jpg`} alt="A strawberry falooda: pink milk, basil seeds, ruby jelly, a strawberry ice-cream scoop and fresh berries" loading="lazy" />
+            <PhotoGlass flavour="strawberry" />
           </div>
         </div>
       </div>

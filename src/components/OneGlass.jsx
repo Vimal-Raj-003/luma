@@ -3,7 +3,8 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import PhotoGlass from './PhotoGlass'
 import { ING } from './Ingredients'
-import { FLAVOURS, SELECTOR, SITE } from '../data/site'
+import { FLAVOUR_BG } from './PhotoGlass'
+import { FLAVOURS, HERO_COPY, SELECTOR, SITE } from '../data/site'
 import { prefersReduced, splitWords } from '../hooks/motion'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -11,11 +12,11 @@ gsap.registerPlugin(ScrollTrigger)
 const Mango = () => <ING.cube color="#FFC247" />
 // toppings that belong to each featured flavour: [component, left %, top %, size px, parallax speed]
 const FEAT = [
-  { id: 'strawberry', fl: [[ING.berry, 66, 16, 70, 1], [ING.jelly, 82, 68, 56, 1.6], [ING.petal, 60, 80, 44, 2]] },
-  { id: 'rose', fl: [[ING.petal, 64, 18, 66, 1.4], [ING.berry, 88, 24, 52, 1.8], [ING.pistachio, 70, 78, 46, 1]] },
-  { id: 'mango', fl: [[Mango, 64, 18, 60, 1.3], [ING.almond, 88, 22, 54, 1.8], [ING.cherry, 72, 78, 44, 1]] },
+  { id: 'strawberry', fl: [[ING.berry, 66, 16, 70, 1], [ING.jelly, 82, 68, 56, 1.6], [ING.berry, 60, 80, 44, 2]] },
+  { id: 'rose', fl: [[ING.petal, 64, 18, 66, 1.4], [ING.petal, 88, 24, 52, 1.8], [ING.petal, 70, 78, 46, 1]] },
+  { id: 'mango', fl: [[Mango, 64, 18, 60, 1.3], [ING.almond, 88, 22, 54, 1.8], [Mango, 72, 78, 44, 1]] },
   { id: 'pistachio', fl: [[ING.pistachio, 60, 20, 62, 1.5], [ING.basil, 90, 28, 48, 1], [ING.almond, 64, 76, 50, 2]] },
-  { id: 'chocolate', fl: [[ING.almond, 62, 18, 58, 1.4], [ING.cherry, 88, 26, 48, 1.8], [ING.basil, 66, 78, 44, 1]] },
+  { id: 'chocolate', fl: [[ING.almond, 62, 18, 58, 1.4], [ING.almond, 88, 26, 48, 1.8], [ING.basil, 66, 78, 44, 1]] },
   { id: 'dryfruit', fl: [[ING.almond, 64, 20, 62, 1.6], [ING.pistachio, 90, 30, 52, 1.2], [ING.petal, 70, 78, 46, 2]] },
 ]
 
@@ -97,12 +98,12 @@ export default function OneGlass() {
   return (
     <section className="scene og" id="cravings" ref={root}>
       <div className="og-bgs" aria-hidden="true">
-        {FEAT.map((f) => <div className="og-bg" key={f.id} style={{ '--ac': SELECTOR[f.id].accent }} />)}
+        {FEAT.map((f) => <div className="og-bg" key={f.id} style={{ '--ac': SELECTOR[f.id].accent, backgroundImage: `url(${FLAVOUR_BG(f.id)})` }} />)}
       </div>
       <div className="wrap og-scene">
         <div className="og-head">
           <p className="eyebrow light">One glass</p>
-          <h2 className="h2 og-title" data-split>One Glass. <em>Endless Cravings.</em></h2>
+          <h2 className="h2 og-title" data-split>One Glass. <em>Endless Flavour.</em></h2>
         </div>
         <ol className="og-rail" aria-label="Featured flavours">
           {FEAT.map((f, i) => (
@@ -124,9 +125,9 @@ export default function OneGlass() {
                 <div className="og-copy">
                   <h3 className="og-name-m"><span className="og-name">{d.title}</span></h3>
                   <div className="og-info">
-                    <p>{d.line}</p>
+                    <p>{HERO_COPY[f.id]}</p>
                     <ul>{d.notes.map((x) => <li key={x}>{x}</li>)}</ul>
-                    <div className="og-buy"><span className="price">{SITE.currency}{d.price}</span><a className="btn btn-rose btn-sm" href="#flavours">See the menu</a></div>
+                    <div className="og-buy"><span className="price">{SITE.currency}{d.price}</span><a className="btn btn-rose btn-sm" href="#flavours">Explore the menu</a></div>
                   </div>
                 </div>
               </article>

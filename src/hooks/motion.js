@@ -77,9 +77,9 @@ export function useReveal(scope) {
 }
 
 /* Subtle micro-interactions (desktop pointers only): magnetic buttons + tilting product cards. */
-export function useMicro(scope) {
+export function useMicro(scope, ready = true) {
   useEffect(() => {
-    if (!finePointer() || prefersReduced()) return
+    if (!ready || !finePointer() || prefersReduced()) return
     const offs = []
     const on = (el, ev, fn) => {
       el.addEventListener(ev, fn)
@@ -142,5 +142,5 @@ export function useMicro(scope) {
     })
 
     return () => offs.forEach((f) => f())
-  }, [])
+  }, [ready])
 }

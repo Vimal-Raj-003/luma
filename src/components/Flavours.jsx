@@ -27,8 +27,8 @@ export default function Flavours() {
   return (
     <section className="section" id="flavours">
       <div className="wrap">
-        <SectionHead eyebrow="The menu" title={<>Six ways to say <em>yes.</em></>}>
-          Each one built layer by layer, chilled to order.
+        <SectionHead eyebrow="The menu" title={<>Six signature <em>flavours.</em></>}>
+          Every Falooda is layered to order and served chilled.
         </SectionHead>
 
         <ul className="cards">

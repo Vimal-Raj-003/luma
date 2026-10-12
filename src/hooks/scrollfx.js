@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { finePointer, prefersReduced, splitWords } from './motion'
 
 gsap.registerPlugin(ScrollTrigger)
+if (import.meta.env.DEV) window.__gsap = { gsap, ScrollTrigger } // dev-only: inspect the scroll system from the console
 
 /*
   Scroll choreography for everything below the hero (GSAP + ScrollTrigger, transform / opacity / clip-path only).
@@ -17,10 +18,10 @@ const SECTIONS = '.section'
 const NO_MASK = new Set(['why', 'visit', 'flavours'])
 const BRIDGED = '#flavours, #why, #reviews, #faq, #visit'
 
-export function useScrollFx(scope) {
+export function useScrollFx(scope, ready = true) {
   useLayoutEffect(() => {
     const root = scope.current
-    if (!root) return
+    if (!root || !ready) return
     root.querySelectorAll('[data-split]').forEach(splitWords)
     if (prefersReduced()) return
 
@@ -152,5 +153,5 @@ export function useScrollFx(scope) {
       ctx.revert()
       made.forEach((el) => el.remove())
     }
-  }, [])
+  }, [ready])
 }

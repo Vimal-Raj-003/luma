@@ -8,8 +8,7 @@ gsap.registerPlugin(ScrollTrigger)
 
 // the story, as words; [text, accent?]
 const STORY = [
-  ['Every', 0], ['glass', 0], ['of', 0], ['LUMA', 1], ['begins', 0], ['the', 0], ['same', 0], ['way:', 0], ['a', 0], ['cold', 0], ['pour,', 0], ['a', 0], ['slow', 0], ['swirl', 0], ['of', 0], ['something', 0], ['sweet,', 1],
-  ['and', 0], ['a', 0], ['promise', 0], ['to', 0], ['make', 0], ['you', 0], ['smile.', 1], ['We', 0], ['build', 0], ['it', 0], ['layer', 0], ['by', 0], ['layer', 1], ['—', 0], ['syrup,', 0], ['milk,', 0], ['jelly,', 0], ['cream,', 0], ['crunch', 0], ['—', 0], ['because', 0], ['happiness', 1], ['is', 0], ['better', 0], ['with', 0], ['layers.', 1],
+  ['Every', 0], ['LUMA', 1], ['Falooda', 0], ['is', 0], ['built', 0], ['with', 0], ['the', 0], ['same', 0], ['care:', 0], ['syrup,', 0], ['milk,', 0], ['jelly,', 0], ['cream,', 0], ['crunch,', 0], ['layer', 1], ['by', 1], ['layer.', 1], ['We', 0], ['obsess', 0], ['over', 0], ['balance', 1], ['—', 0], ['the', 0], ['right', 0], ['sweetness,', 0], ['the', 0], ['right', 0], ['texture,', 0], ['always', 0], ['served', 0], ['chilled', 0], ['—', 0], ['because', 0], ['a', 0], ['great', 0], ['dessert', 0], ['is', 0], ['made', 0], ['of', 0], ['details.', 1],
 ]
 const SP = [[ING.petal, 8, 14, 64, 1.6], [ING.pistachio, 88, 22, 58, 1.2], [ING.berry, 12, 74, 78, 1], [ING.almond, 84, 70, 56, 2], [ING.cherry, 52, 6, 44, 1.4]]
 

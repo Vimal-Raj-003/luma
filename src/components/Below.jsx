@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import FlavourSelector from './FlavourSelector'
 import Marquee from './Marquee'
 import Flavours from './Flavours'
 import WhyLuma from './WhyLuma'
@@ -35,7 +34,6 @@ export default function Below() {
 
   return (
     <div ref={scope} style={{ display: 'contents' }}>
-      <FlavourSelector />
       <Marquee />
       <Flavours />
       <OneGlass />

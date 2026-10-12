@@ -48,10 +48,10 @@ const Lock = () => (
 )
 
 const ITEMS = [
-  { i: <Leaf />, t: 'Fresh Ingredients', d: 'Real fruit, nuts and rose — nothing artificial.' },
+  { i: <Leaf />, t: 'Fresh Ingredients', d: 'Real fruit, nuts and rose. Nothing artificial.' },
   { i: <Drop />, t: 'Made Fresh', d: 'Layered to order, chilled and served at once.' },
-  { i: <Scoop />, t: 'Premium Ice Cream', d: 'Slow-churned, creamy and never icy.' },
-  { i: <Rose />, t: 'Authentic Flavours', d: 'Classic recipes with a modern, lighter hand.' },
+  { i: <Scoop />, t: 'Premium Ice Cream', d: 'Slow-churned for a creamy, never icy texture.' },
+  { i: <Rose />, t: 'Authentic Flavours', d: 'Classic recipes, refined with a lighter modern hand.' },
   { i: <Lock />, t: 'Secure Payments', d: 'Safe, simple payments at checkout.' },
 ]
 
@@ -59,7 +59,7 @@ export default function WhyLuma() {
   return (
     <section className="section why" id="why">
       <div className="wrap">
-        <SectionHead eyebrow="Why LUMA" title={<>Small details. <em>Big delight.</em></>} center />
+        <SectionHead eyebrow="Why LUMA" title={<>Made with <em>care.</em></>} center />
         <ul className="why-grid">
           {ITEMS.map((x, n) => (
             <li key={x.t} className="why-item">

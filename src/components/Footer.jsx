@@ -58,7 +58,7 @@ export default function Footer() {
             <div>
               <h4>Shop</h4>
               <a href="#flavours">Products</a>
-              <a href="#mood">Flavours</a>
+              <a href="#top">Flavours</a>
             </div>
             <div>
               <h4>Account</h4>
@@ -84,7 +84,7 @@ export default function Footer() {
         <div className="f-word" aria-hidden="true">LUMA</div>
         <div className="f-bot">
           <span>© {new Date().getFullYear()} LUMA. All rights reserved.</span>
-          <span>Made layer by layer.</span>
+          <span>Crafted in layers.</span>
         </div>
       </div>
       {s && <InfoSheet title={s.title} onClose={() => setSheet(null)}><s.body /></InfoSheet>}

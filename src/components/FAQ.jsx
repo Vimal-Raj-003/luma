@@ -5,9 +5,9 @@ import { prefersReduced } from '../hooks/motion'
 
 // Answers about ingredients are general; anything operational is a bracketed placeholder to fill in before launch.
 const QA = [
-  { q: 'What is a falooda?', a: 'A chilled Indian dessert-drink: rose or fruit syrup, milk, basil seeds, falooda sev (vermicelli), jelly and a scoop of ice cream, built in layers.' },
-  { q: 'Is everything made fresh?', a: 'Every glass is layered to order and served chilled. Fruit, nuts and rose are the real thing.' },
-  { q: 'Which flavours do you have?', a: 'Six signatures: Royal Rose, Mango, Pistachio, Chocolate, Dry Fruit and Strawberry. Every one is built in layers and chilled to order.' },
+  { q: 'What is a falooda?', a: 'A chilled Indian dessert drink built in layers: syrup, milk, basil seeds, falooda sev, jelly and a scoop of ice cream.' },
+  { q: 'Is everything made fresh?', a: 'Yes. Every glass is layered to order and served chilled, with real fruit, nuts and rose.' },
+  { q: 'Which flavours do you have?', a: 'Six signatures: Strawberry, Rose, Mango, Pistachio, Chocolate and Dry Fruit, each layered to order.' },
   { q: 'Do you deliver?', a: '[Delivery details — add your delivery areas, times and fees here.]' },
   { q: 'Allergens and dietary needs?', a: '[Allergen information — list nuts, dairy and gluten notes here.]' },
 ]
