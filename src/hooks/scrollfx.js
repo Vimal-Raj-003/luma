@@ -8,15 +8,15 @@ if (import.meta.env.DEV) window.__gsap = { gsap, ScrollTrigger } // dev-only: in
 
 /*
   Scroll choreography for everything below the hero (GSAP + ScrollTrigger, transform / opacity / clip-path only).
-    reveal   headings (words rise), product cards (rise → image settles → name/price → button last), why-items, reviews, map, footer
+    reveal   headings (words rise), product cards (rise → image settles → name/price → button last), map, footer
     parallax decorative blobs (slow), product images (medium), small particles (faster) — scrubbed, never mouse-driven
     bridge   sections open with a rounded mask + lift while the previous one scrolls away
   Everything animates *from* its hidden state, so with reduced motion (or if this never runs) nothing is left invisible.
   Phones keep every reveal but use shorter distances, fewer particles and no cursor effects.
 */
 const SECTIONS = '.section'
-const NO_MASK = new Set(['why', 'visit', 'flavours'])
-const BRIDGED = '#flavours, #why, #reviews, #faq, #visit'
+const NO_MASK = new Set(['flavours'])
+const BRIDGED = '#flavours'
 
 export function useScrollFx(scope, ready = true) {
   useLayoutEffect(() => {
@@ -78,40 +78,6 @@ export function useScrollFx(scope, ready = true) {
         // the image drifts at a different speed from the card as it scrolls by
         gsap.fromTo(li.querySelector('.card-media'), { y: 16 * d }, { y: -16 * d, ease: 'none', scrollTrigger: scrub(li) })
       })
-
-      /* ---------- why LUMA ---------- */
-      gsap.utils.toArray('.why-item').forEach((it, i) => {
-        const tl = gsap.timeline({ scrollTrigger: at(it, { start: 'top 92%' }) })
-        const s = (mobile ? i % 2 : i) * 0.1
-        tl.from(it, { y: 60 * d, opacity: 0, duration: 1, ease: 'expo.out', clearProps: 'transform' }, s)
-          .from(it.querySelector('.why-ico'), { scale: 0.3, rotate: -35, opacity: 0, duration: 0.9, ease: 'back.out(1.7)' }, s + 0.2)
-          .from(it.querySelectorAll('h3, p'), { y: 14, opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power3.out' }, s + 0.45)
-      })
-
-      /* ---------- reviews ---------- */
-      const rn = root.querySelector('.rev-nav')
-      if (rn) gsap.from(rn, { y: 20, opacity: 0, duration: 0.7, ease: 'power3.out', scrollTrigger: at(rn, { start: 'top 95%' }) })
-      const rt = root.querySelector('.rev-track')
-      if (rt) {
-        gsap.from(rt.querySelectorAll('.review'), { x: 90 * d, y: 30 * d, opacity: 0, scale: 0.95, duration: 1.1, stagger: 0.12, ease: 'expo.out', clearProps: 'transform', scrollTrigger: at(rt, { start: 'top 90%' }) })
-        gsap.from(rt.querySelectorAll('.q'), { scale: 0, rotate: -30, duration: 0.8, stagger: 0.12, delay: 0.3, ease: 'back.out(2)', scrollTrigger: at(rt, { start: 'top 90%' }) })
-      }
-
-      /* ---------- faq ---------- */
-      const fl = root.querySelector('.faq-list')
-      if (fl) gsap.from(fl.children, { y: 36 * d, opacity: 0, duration: 0.9, stagger: 0.09, ease: 'expo.out', clearProps: 'transform', scrollTrigger: at(fl, { start: 'top 90%' }) })
-
-      /* ---------- visit ---------- */
-      const vg = root.querySelector('.visit-grid')
-      if (vg) {
-        const parts = vg.querySelectorAll('.addr, .hours > div, .hero-cta .btn')
-        gsap.from(parts, { y: 24, opacity: 0, duration: 0.8, stagger: 0.07, ease: 'power3.out', scrollTrigger: at(vg, { start: 'top 80%' }) })
-        const map = vg.querySelector('.map')
-        if (map) {
-          gsap.from(map, { clipPath: 'inset(12% 12% 12% 12% round 48px)', opacity: 0, scale: 0.92, duration: 1.3, ease: 'expo.out', scrollTrigger: at(map, { start: 'top 88%' }) })
-          gsap.fromTo(map.querySelector('svg'), { scale: 1.22 }, { scale: 1, ease: 'none', scrollTrigger: scrub(map) })
-        }
-      }
 
       /* ---------- footer ---------- */
       const ft = root.querySelector('.footer')

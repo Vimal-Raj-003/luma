@@ -7,18 +7,10 @@ export const SITE = {
   // ---- PLACEHOLDERS: replace before launch ----
   contact: {
     phoneLabel: '[Phone number]',
-    phoneHref: '#contact',
     email: '[hello@yourdomain]',
     instagramHref: '#',
     orderHref: '#flavours',
-    directionsHref: '#',
   },
-  address: ['[Street address line 1]', '[Area, City, Postcode]'],
-  hours: [
-    ['Monday – Thursday', '[00:00] – [00:00]'],
-    ['Friday – Saturday', '[00:00] – [00:00]'],
-    ['Sunday', '[00:00] – [00:00]'],
-  ],
 }
 
 export const FLAVOURS = [
@@ -123,14 +115,6 @@ export const SELECTOR = {
     accent: '#B9774F',
   },
 }
-
-export const REVIEWS = [
-  { quote: 'The perfect balance of creamy and refreshing.', who: 'Guest review', tag: 'Royal Rose' },
-  { quote: 'The best falooda I have had. Elegant and never too sweet.', who: 'Guest review', tag: 'Royal Rose' },
-  { quote: 'Every spoonful is a different layer, and every layer is balanced.', who: 'Guest review', tag: 'Pistachio' },
-  { quote: 'The mango falooda tastes like a sunny afternoon.', who: 'Guest review', tag: 'Mango' },
-  { quote: 'Beautiful to look at, and even better to finish.', who: 'Guest review', tag: 'Signature' },
-]
 
 // Hero showcase copy per flavour (title / notes / colours come from SELECTOR, price from FLAVOURS)
 export const HERO_COPY = {

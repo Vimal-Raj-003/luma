@@ -2,14 +2,10 @@ import { useEffect, useRef } from 'react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Marquee from './Marquee'
 import Flavours from './Flavours'
-import WhyLuma from './WhyLuma'
 import Signature from './Signature'
-import Testimonials from './Testimonials'
-import FAQ from './FAQ'
 import OneGlass from './OneGlass'
 import FreshlyMade from './FreshlyMade'
 import CtaScene from './CtaScene'
-import Visit from './Visit'
 import Footer from './Footer'
 import { useMicro } from '../hooks/motion'
 import { useScrollFx } from '../hooks/scrollfx'
@@ -37,12 +33,8 @@ export default function Below() {
       <Flavours />
       <OneGlass />
       <FreshlyMade />
-      <WhyLuma />
       <Signature />
-      <Testimonials />
-      <FAQ />
       <CtaScene />
-      <Visit />
       <Footer />
     </div>
   )

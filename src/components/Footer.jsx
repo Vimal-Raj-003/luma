@@ -70,7 +70,6 @@ export default function Footer() {
             <div>
               <h4>Customer care</h4>
               <a href="#visit">Contact Us</a>
-              <a href="#faq">FAQ</a>
               <a href="#shipping" onClick={open('shipping')}>Shipping Policy</a>
               <a href="#refund" onClick={open('refund')}>Refund Policy</a>
             </div>

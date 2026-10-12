@@ -87,7 +87,7 @@ export function useMicro(scope, ready = true) {
     }
 
     const root = scope?.current || document
-    root.querySelectorAll('.btn, .rev-nav button').forEach((b) => {
+    root.querySelectorAll('.btn').forEach((b) => {
       // created on first hover, not up front: a quickTo auto-overwrites any scroll-entrance tween on the same x / y
       let q = null
       const get = () => (q ||= [gsap.quickTo(b, 'x', { duration: 0.6, ease: 'power3.out' }), gsap.quickTo(b, 'y', { duration: 0.6, ease: 'power3.out' })])
