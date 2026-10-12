@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Marquee from './Marquee'
 import Flavours from './Flavours'
-import Signature from './Signature'
 import OneGlass from './OneGlass'
 import FreshlyMade from './FreshlyMade'
 import CtaScene from './CtaScene'
@@ -33,7 +32,6 @@ export default function Below() {
       <Flavours />
       <OneGlass />
       <FreshlyMade />
-      <Signature />
       <CtaScene />
       <Footer />
     </div>

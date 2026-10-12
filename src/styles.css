@@ -90,7 +90,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* ---------- reveal ---------- */
 .wm { display: inline-block; overflow: hidden; vertical-align: top; padding: 0.02em 0.04em 0.16em; margin: 0 -0.04em -0.16em; }
 .wi { display: inline-block; will-change: transform; }
-.js .signature .wi { display: inline-block; }
 
 /* ---------- ambient float (CSS-only, transform-only) ---------- */
 .float { animation: floaty var(--dur, 5s) ease-in-out var(--delay, 0s) infinite alternate; will-change: transform; }
@@ -176,29 +175,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .sel-m { display: inline-block; overflow: hidden; vertical-align: top; padding: 0.02em 0.06em 0.16em; margin-bottom: -0.16em; }
 
 /* ==========================================================================
-   Signature
-   ========================================================================== */
-.signature { position: relative; overflow: clip; background: linear-gradient(180deg, #4a1942 0%, #33102e 100%); color: var(--cream); min-height: 100svh; display: grid; align-content: center; padding-block: 84px 56px; }
-.sg-wave { position: absolute; left: 0; top: -1px; width: 100%; height: clamp(30px, 5vw, 70px); }
-.sg-wave.bot { display: none; } /* the section below is dark now (the cream FAQ it used to wave into is gone) */
-.sg-grid { position: relative; z-index: 2; display: grid; gap: 1rem; justify-items: center; text-align: center; }
-.sg-title { font-size: clamp(2rem, 6.4vw, 4.6rem); color: var(--cream); }
-.signature .wm { padding-bottom: 0.16em; }
-.signature .h2 em { color: #ff9fbd; }
-.sg-stage { --mh: min(44svh, 400px); position: relative; display: grid; place-items: center; width: 100%; height: var(--mh); }
-.sg-glass { position: relative; height: var(--mh); aspect-ratio: 400 / 560; will-change: transform; }
-.sg-glass svg { width: 100%; height: 100%; }
-.sg-ring { position: absolute; width: min(86vw, 560px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(closest-side, rgba(240, 112, 155, 0.55), rgba(240, 112, 155, 0) 72%); will-change: transform; }
-.sg-fls { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-.sg-fl { position: absolute; left: var(--mx); top: var(--my); width: var(--ms); will-change: transform; }
-.sg-fl svg, .sg-fl .ing { width: 100%; height: auto; }
-@media (min-width: 900px) {
-  .sg-fl { left: var(--x); top: var(--y); width: var(--s); }
-  .sg-stage { --mh: min(56svh, 520px); }
-  .signature { padding-block: 96px 64px; }
-}
-
-/* ==========================================================================
    Footer
    ========================================================================== */
 .footer { background: var(--plum-2); color: var(--cream); padding: clamp(56px, 8vw, 100px) 0 28px; overflow: clip; }
@@ -256,11 +232,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .nav.on-dark .btn-dark { background: var(--rose-d); color: #fff; }
 
 
-/* Signature: a real photograph, framed */
-.sg-photo { position: relative; height: var(--mh); aspect-ratio: calc(840 / var(--oh, 1342)); will-change: transform; }
-.sg-photo .pg { height: 100%; width: 100%; will-change: transform; }
-.sg-stage { --mh: min(44svh, 420px); }
-@media (min-width: 900px) { .sg-stage { --mh: min(52svh, 500px); } }
 
 /* nav: a soft blur as soon as the page moves, solid cream once the dark hero is gone */
 .nav.scrolled { backdrop-filter: blur(12px) saturate(1.2); -webkit-backdrop-filter: blur(12px) saturate(1.2); }
@@ -621,3 +592,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @media (max-width: 599px) { .hx-art { --ah: min(32svh, 330px); } .hx-cta { gap: 8px; } .hx-cta .btn { min-height: 46px; padding-inline: 1.2rem; } }
 /* card buttons: always side by side from 640px up (below that the card is a narrow two-column tile, so they may stack) */
 @media (min-width: 640px) { .card-btns { flex-wrap: nowrap; } }
+
+/* Footer: the finale's plum / berry scene carries on underneath (it starts on the flat plum the CTA fades into, so there is no seam) */
+.footer { background: linear-gradient(to bottom, var(--plum-2) 0, rgba(30, 9, 28, 0.8) 240px, rgba(24, 6, 22, 0.92) 100%), url('/assets/flavours/strawberry-bg.webp') 62% 100% / cover no-repeat, var(--plum-2); }
+.footer::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(closest-side at 16% 62%, rgba(240, 112, 155, 0.16), transparent), radial-gradient(closest-side at 86% 30%, rgba(255, 190, 59, 0.09), transparent), radial-gradient(closest-side at 60% 100%, rgba(199, 59, 114, 0.18), transparent); }
