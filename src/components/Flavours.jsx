@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import PhotoGlass from './PhotoGlass'
+import PhotoGlass, { FLAVOUR_BG } from './PhotoGlass'
 import AddToCart from './AddToCart'
 import ProductSheet, { Heart, burst } from './ProductSheet'
 import { toggleWish, useStore } from '../store'
@@ -35,7 +35,7 @@ export default function Flavours() {
         <ul className="cards">
           {FLAVOURS.map((f, i) => (
             <li key={f.id}>
-              <article className="card" style={{ '--glow': f.glow }} onClick={(e) => !e.target.closest('a, button') && setSheet(f)}>
+              <article className="card" data-flavour={f.id} style={{ '--glow': f.glow, '--bg': `url(${FLAVOUR_BG(f.id)})` }} onClick={(e) => !e.target.closest('a, button') && setSheet(f)}>
                 <button className="card-heart" aria-pressed={store.wish.includes(f.id)} aria-label={`${store.wish.includes(f.id) ? 'Remove' : 'Save'} ${f.name} ${store.wish.includes(f.id) ? 'from' : 'to'} wishlist`} onClick={(e) => wish(e, f.id)}><Heart /></button>
                 <span className="card-no">0{i + 1}</span>
                 <div className="card-media">

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { FLAVOURS, SITE } from '../data/site'
 import { cartCount, setQty, useStore } from '../store'
+import { payCart } from '../checkout'
 import { prefersReduced } from '../hooks/motion'
 
 export const Logo = ({ light = false }) => (
@@ -24,7 +25,18 @@ export default function Nav() {
   const badge = useRef(null)
   const panel = useRef(null)
   const prevN = useRef(n)
+  const [pay, setPay] = useState({ busy: false, status: '', message: '' })
   const total = FLAVOURS.reduce((a, f) => a + (store.items[f.id] || 0) * f.price, 0)
+
+  // Cart → server creates the Razorpay order from the cart → Razorpay Checkout → server verifies the signature
+  const checkout = async () => {
+    if (pay.busy) return
+    setPay({ busy: true, status: '', message: '' })
+    const items = FLAVOURS.filter((f) => store.items[f.id]).map((f) => ({ id: f.id, qty: store.items[f.id] }))
+    const r = await payCart(items)
+    if (r.status === 'paid') items.forEach((i) => setQty(i.id, 0)) // paid and verified: the cart is done
+    setPay({ busy: false, status: r.status, message: r.message + (r.status === 'paid' ? ' Payment id: ' + r.paymentId : '') })
+  }
 
   useEffect(() => { // the badge pops whenever something is added
     if (n > prevN.current && badge.current && !prefersReduced()) gsap.fromTo(badge.current, { scale: 1.9 }, { scale: 1, duration: 0.8, ease: 'elastic.out(1.2, 0.45)' })
@@ -106,7 +118,7 @@ export default function Nav() {
             </button>
             {cart && (
               <div className="cart-panel" ref={panel} role="dialog" aria-label="Your cart">
-                {n === 0 ? <p className="cart-empty">Your cart is empty.<br />Pick a falooda below.</p> : (
+                {n === 0 ? (pay.status === 'paid' ? <p className="cart-msg ok" role="status">{pay.message}</p> : <p className="cart-empty">Your cart is empty.<br />Pick a falooda below.</p>) : (
                   <>
                     <ul>
                       {FLAVOURS.filter((f) => store.items[f.id]).map((f) => (
@@ -121,7 +133,8 @@ export default function Nav() {
                       ))}
                     </ul>
                     <div className="cart-total"><span>Total</span><b>{SITE.currency}{total}</b></div>
-                    <button className="btn btn-rose btn-sm cart-go" disabled>Checkout opens soon</button>
+                    <button className="btn btn-rose btn-sm cart-go" onClick={checkout} disabled={pay.busy}>{pay.busy ? 'Opening payment…' : `Pay ${SITE.currency}${total}`}</button>
+                    {pay.message && pay.status !== 'paid' && <p className="cart-msg" role="status">{pay.message}</p>}
                   </>
                 )}
               </div>

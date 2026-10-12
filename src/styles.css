@@ -596,3 +596,27 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* Footer: the finale's plum / berry scene carries on underneath (it starts on the flat plum the CTA fades into, so there is no seam) */
 .footer { background: linear-gradient(to bottom, var(--plum-2) 0, rgba(30, 9, 28, 0.8) 240px, rgba(24, 6, 22, 0.92) 100%), url('/assets/flavours/strawberry-bg.webp') 62% 100% / cover no-repeat, var(--plum-2); }
 .footer::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(closest-side at 16% 62%, rgba(240, 112, 155, 0.16), transparent), radial-gradient(closest-side at 86% 30%, rgba(255, 190, 59, 0.09), transparent), radial-gradient(closest-side at 60% 100%, rgba(199, 59, 114, 0.18), transparent); }
+
+/* Flavour cards: one premium system for every product. The flavour's own cinematic backdrop fills the top of the card
+   (set per card through --bg), the cut-out glass stands large in front of it, and the backdrop melts into the white body. */
+.card { --mh: 340px; display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 0; border-radius: 30px; border-color: rgba(74, 25, 66, 0.08); box-shadow: 0 24px 50px -34px rgba(74, 25, 66, 0.45); }
+.card::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: calc(var(--mh) + 24px); z-index: -1; background: radial-gradient(ellipse 70% 60% at 50% 52%, color-mix(in srgb, var(--glow) 62%, transparent), transparent 75%), var(--bg) 50% 35% / cover no-repeat, color-mix(in srgb, var(--glow) 30%, #fff); filter: brightness(1.55) saturate(1.25); -webkit-mask-image: linear-gradient(#000 58%, transparent 94%); mask-image: linear-gradient(#000 58%, transparent 94%); }
+.card-media { --mh: inherit; width: 100%; height: var(--mh); padding-top: 18px; }
+.card-media .glass-box { height: calc(var(--mh) - 30px); }
+.card-media .pg-img { filter: drop-shadow(0 22px 22px rgba(20, 6, 16, 0.4)); }
+.card-glow { display: none; }
+.card-no { left: 22px; top: 18px; font-size: 1.05rem; color: #fff; text-shadow: 0 1px 8px rgba(20, 6, 16, 0.55); }
+.card-heart, .card-heart { right: 18px; left: auto; top: 14px; bottom: auto; width: 42px; height: 42px; }
+.card-body { padding: 4px 24px 24px; }
+.card h3 { font-size: 1.6rem; }
+.card p { font-size: 0.95rem; }
+.card-foot { margin-top: 1rem; flex-wrap: nowrap; }
+.card-btns { flex-wrap: nowrap; }
+@media (max-width: 679px) { .card-heart { right: 18px; left: auto; top: 14px; bottom: auto; width: 42px; height: 42px; } }
+@media (max-width: 420px) { .card { --mh: 300px; } .card-body { padding-inline: 18px; } .card-foot { flex-wrap: wrap; } .card-btns { width: 100%; } }
+@media (min-width: 1024px) and (max-width: 1179px) { .cards { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1180px) { .cards { grid-template-columns: repeat(3, 1fr); } .card-body { padding-inline: 20px; } .card-btns .btn { padding-inline: 1.1rem; } }
+@media (hover: hover) { .card:hover { box-shadow: 0 34px 60px -30px color-mix(in srgb, var(--glow) 80%, transparent); } }
+.card[data-flavour='pistachio']::before { filter: brightness(1.4) saturate(0.7); }
+.cart-msg { margin-top: 10px; font-size: 0.82rem; line-height: 1.45; color: var(--rose-d); text-align: center; overflow-wrap: anywhere; }
+.cart-msg.ok { color: #2f7a3e; font-size: 0.9rem; padding: 8px 4px; margin: 0; }
