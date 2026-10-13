@@ -1,6 +1,7 @@
 // LUMA database (Neon Postgres). Money is stored in paise (₹1 = 100) so it matches what Razorpay expects.
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"] // "native" for this machine, rhel-openssl-3.0.x for Vercel Serverless (Amazon Linux)
 }
 
 datasource db {

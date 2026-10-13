@@ -50,6 +50,7 @@ const PATHS = {
   signin: 'M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3',
   create: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M22 11h-6',
   account: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z',
+  orders: 'M6 3h12v18l-3-2-3 2-3-2-3 2V3Zm3 5h6m-6 4h6',
   wishlist: 'M12 21s-7.5-4.6-9.4-9.3C1.3 8.4 3.2 5 6.6 5c2 0 3.7 1.1 5.4 3.2C13.7 6.1 15.4 5 17.4 5c3.4 0 5.3 3.4 4 6.7C19.5 16.4 12 21 12 21Z',
   cart: 'M5 8h14l-1.2 11a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8Zm4 0V6.5a3 3 0 0 1 6 0V8',
   admin: 'M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6l8-3Z',
@@ -101,6 +102,7 @@ export function AccountButton() {
           {who ? (
             <>
               <div className="acct-who"><strong>{who.name}</strong>{who.sub && <small>{who.sub}</small>}</div>
+              {acct.member && <Item icon="orders" onClick={footerLink('#orders')}>My Orders</Item>}
               <Item icon="wishlist" onClick={footerLink('#wishlist')}>Wishlist</Item>
               <Item icon="cart" onClick={() => window.dispatchEvent(new Event('luma:cart'))}>Cart</Item>
               {acct.member && <Item icon="account" onClick={acct.manage}>My Account</Item>}

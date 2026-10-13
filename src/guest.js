@@ -28,5 +28,5 @@ export async function createGuest(name, mobile) {
   })
   const j = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error(j.error || 'Something went wrong. Please try again.')
-  set({ token: j.token, expires: j.expires, name: j.name })
+  set({ token: j.token, expires: j.expires, name: j.name, phone: j.phone })
 }

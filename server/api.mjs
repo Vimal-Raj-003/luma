@@ -4,6 +4,7 @@ import { requireUser, isAdmin } from './auth.mjs'
 import { adminApi } from './admin.mjs'
 import { offerEnabled } from './settings.mjs'
 import { createGuest } from './guest.mjs'
+import { myOrders } from './orders.mjs'
 import { db } from './db.mjs'
 
 const send = (res, code, body) => { res.statusCode = code; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(body)) }
@@ -17,6 +18,7 @@ export function api(req, res, next) {
     return requireUser(req).then(async (u) => send(res, 200, { id: u.id, name: u.name, email: u.email, created: u.created, admin: await isAdmin(req) })).catch(fail)
   }
   if (path === '/api/guest' && req.method === 'POST') return createGuest(req).then((r) => send(res, 200, r)).catch(fail) // name + mobile -> a lightweight customer (no OTP)
+  if (path === '/api/my/orders' && req.method === 'GET') return myOrders(req).then((r) => { res.setHeader('Cache-Control', 'no-store'); send(res, 200, r) }).catch(fail) // a verified customer's own orders
   if (path.startsWith('/api/admin/')) return adminApi(req, res)
   if (path === '/api/offer' && req.method === 'GET') { // public: is the ₹1 offer currently on?
     return offerEnabled().then((enabled) => { res.setHeader('Cache-Control', 'no-store'); send(res, 200, { enabled }) }).catch(fail)

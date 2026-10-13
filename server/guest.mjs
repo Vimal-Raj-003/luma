@@ -63,5 +63,5 @@ export async function createGuest(req) {
   const m = /^Bearer (lumag\..+)$/.exec(req.headers.authorization || '')
   if (m) existing = await guestFromToken(m[1]).catch(() => null)
   const user = existing ? await db.user.update({ where: { id: existing.id }, data }) : await db.user.create({ data })
-  return { ...issueGuestToken(user.id), name: user.name }
+  return { ...issueGuestToken(user.id), name: user.name, phone: user.phone }
 }

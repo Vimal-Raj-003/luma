@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import gsap from 'gsap'
 import { lockScroll, prefersReduced } from '../hooks/motion'
 
@@ -40,7 +41,8 @@ export default function InfoSheet({ title, onClose, children }) {
     return () => { ctx.revert(); window.removeEventListener('keydown', key); lockScroll(false); prev?.focus?.() }
   }, [])
 
-  return (
+  return createPortal( // on the page body, so it is never hidden behind the pinned hero when opened from the account menu
+    (
     <div className="ps is" ref={root} role="dialog" aria-modal="true" aria-label={title}>
       <div className="ps-back" onClick={close} />
       <div className="ps-panel is-panel">
@@ -53,5 +55,7 @@ export default function InfoSheet({ title, onClose, children }) {
         </div>
       </div>
     </div>
+    ),
+    document.body,
   )
 }

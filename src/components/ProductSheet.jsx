@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import PhotoGlass from './PhotoGlass'
 import { SITE } from '../data/site'
-import { addToCart, toggleWish, useStore } from '../store'
+import { toggleWish, useStore } from '../store'
+import { payCart } from '../checkout'
 import { lockScroll, prefersReduced } from '../hooks/motion'
 import { rememberIntent, useAccount } from '../auth'
 
@@ -33,6 +34,7 @@ export default function ProductSheet({ f, onClose }) {
   const wished = store.wish.includes(f.id)
   const closing = useRef(false)
   const acct = useAccount()
+  const [pay, setPay] = useState({ busy: false, status: '', message: '' })
 
   const close = () => {
     if (closing.current) return
@@ -70,22 +72,23 @@ export default function ProductSheet({ f, onClose }) {
     return () => { ctx.revert(); window.removeEventListener('keydown', key); lockScroll(false); prev?.focus?.() }
   }, [])
 
-  // Buy Now: this product and quantity go into the existing cart, the sheet closes and the existing cart / checkout panel opens
-  const go = () => {
-    addToCart(f.id, qty)
-    closing.current = true
-    onClose()
-    window.dispatchEvent(new Event('luma:cart'))
+  // Buy Now: this product and quantity are paid for directly (the cart is not involved). The server prices it from the database and creates the Razorpay order.
+  const payNow = async () => {
+    setPay({ busy: true, status: '', message: '' })
+    const r = await payCart([{ id: f.id, qty }], acct.getToken)
+    setPay({ busy: false, status: r.status, message: r.status === 'paid' ? `Payment successful. Thank you! Payment id: ${r.paymentId}` : r.message })
   }
+  const go = useRef()
+  go.current = payNow
   const buy = () => {
-    if (!acct.loaded) return
+    if (!acct.loaded || pay.busy) return
     if (!acct.signedIn) { rememberIntent({ type: 'buy', id: f.id, qty }); acct.signIn(); return } // buying needs an account; browsing does not
-    go()
+    payNow()
   }
-  useEffect(() => { // the navbar replays the purchase once they are signed in; this sheet just steps aside
-    const done = () => { closing.current = true; onClose() }
-    window.addEventListener('luma:resume', done)
-    return () => window.removeEventListener('luma:resume', done)
+  useEffect(() => { // signed in while this sheet was open: carry straight on to the payment
+    const on = (e) => { if (e.detail?.type !== 'buy' || e.detail.handled) return; e.detail.handled = true; go.current() }
+    window.addEventListener('luma:resume', on)
+    return () => window.removeEventListener('luma:resume', on)
   }, [])
   const heart = (e) => {
     toggleWish(f.id)
@@ -116,9 +119,10 @@ export default function ProductSheet({ f, onClose }) {
             </div>
           </div>
           <div className="ps-actions">
-            <button className="btn btn-rose ps-add" onClick={buy}>Buy Now</button>
+            <button className="btn btn-rose ps-add" onClick={buy} disabled={pay.busy}>{pay.busy ? 'Opening payment…' : 'Buy Now'}</button>
             <button className="card-heart ps-heart" aria-pressed={wished} aria-label={wished ? 'Remove from wishlist' : 'Save to wishlist'} onClick={heart}><Heart /></button>
           </div>
+          {pay.message && <p className={`ps-msg${pay.status === 'paid' ? ' ok' : ''}`} role="status">{pay.message}</p>}
         </div>
       </div>
     </div>

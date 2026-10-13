@@ -709,3 +709,24 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .acct-who small { color: var(--muted); font-size: 0.8rem; overflow-wrap: anywhere; }
 .acct-menu hr { border: 0; height: 1px; margin: 6px 4px; background: var(--line); }
 .acct-menu button svg { flex: none; color: var(--rose-d); }
+
+/* checkout summary lines in the cart panel; Buy Now status in the product sheet; the customer's order history */
+.cart-panel li small { display: block; margin-top: 2px; font-weight: 500; color: var(--muted); font-size: 0.78rem; }
+.cart-sum { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.88rem; color: var(--muted); }
+.cart-sum + .cart-total { margin-top: 8px; }
+.cart-who { margin-top: 10px; font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
+.cart-who b { color: var(--plum); }
+.ps-msg { margin-top: 12px; font-size: 0.88rem; line-height: 1.45; color: var(--rose-d); overflow-wrap: anywhere; }
+.ps-msg.ok { color: #2f7a3e; }
+.mo { display: grid; gap: 12px; list-style: none; padding: 0; margin: 0; }
+.mo > li { padding: 14px; border-radius: 16px; border: 1px solid var(--line); background: #fff; }
+.mo-top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 0.85rem; color: var(--muted); }
+.mo-top strong { color: var(--plum); letter-spacing: 0.04em; }
+.mo-items { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 4px; font-size: 0.92rem; }
+.mo-items li { display: flex; justify-content: space-between; gap: 10px; }
+.mo-sum { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 0.85rem; color: var(--muted); }
+.mo-sum b { color: var(--ink); font-size: 1rem; }
+.mo-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.mo-tag { padding: 4px 10px; border-radius: 999px; background: rgba(74, 25, 66, 0.08); color: var(--plum); font-size: 0.75rem; font-weight: 700; }
+.mo-tag.paid { background: rgba(47, 122, 62, 0.14); color: #2f7a3e; }
+.mo-tag.failed { background: rgba(199, 59, 114, 0.14); color: var(--rose-d); }

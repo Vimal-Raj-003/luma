@@ -44,8 +44,9 @@ export default function Nav() {
   const resume = useRef()
   resume.current = (i) => {
     if ((i.type !== 'buy' && i.type !== 'pay') || i.handled) return
+    if (i.type === 'buy' && document.querySelector('.ps:not(.is)')) return // the open product sheet pays for it directly
     i.handled = true
-    if (i.type === 'buy') addToCart(i.id, i.qty) // Buy Now, picked up after sign-in: this product and quantity go into the cart
+    if (i.type === 'buy') addToCart(i.id, i.qty) // coming back from Google reloads the page, so the sheet is gone: this product and quantity go into the cart
     setCart(true)
     if (i.type === 'pay') checkout()
   }
@@ -141,7 +142,7 @@ export default function Nav() {
                     <ul>
                       {FLAVOURS.filter((f) => store.items[f.id]).map((f) => (
                         <li key={f.id}>
-                          <span>{f.name}</span>
+                          <span>{f.name}<small>{SITE.currency}{f.price * store.items[f.id]}</small></span>
                           <span className="cart-q">
                             <button onClick={() => setQty(f.id, store.items[f.id] - 1)} aria-label={`Fewer ${f.name}`}>−</button>
                             <b>{store.items[f.id]}</b>
@@ -150,7 +151,10 @@ export default function Nav() {
                         </li>
                       ))}
                     </ul>
+                    <div className="cart-sum"><span>Subtotal</span><span>{SITE.currency}{total}</span></div>
+                    <div className="cart-sum"><span>Shipping</span><span>{SITE.currency}0</span></div>
                     <div className="cart-total"><span>Total</span><b>{SITE.currency}{total}</b></div>
+                    {acct.who && <p className="cart-who">Paying as <b>{acct.who.name}</b>{(acct.guest?.phone || acct.who.sub) && <> · {acct.guest?.phone || acct.who.sub}</>}</p>}
                     <button className="btn btn-rose btn-sm cart-go" onClick={checkout} disabled={pay.busy}>{pay.busy ? 'Opening payment…' : `Pay ${SITE.currency}${total}`}</button>
                     {pay.message && pay.status !== 'paid' && <p className="cart-msg" role="status">{pay.message}</p>}
                   </>
