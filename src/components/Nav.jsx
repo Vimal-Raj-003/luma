@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { FLAVOURS, SITE } from '../data/site'
-import { cartCount, setQty, useStore } from '../store'
+import { addToCart, cartCount, setQty, useStore } from '../store'
 import { payCart } from '../checkout'
+import { AccountButton, rememberIntent, useAccount } from '../auth'
 import { prefersReduced } from '../hooks/motion'
 
 export const Logo = ({ light = false }) => (
@@ -25,18 +26,34 @@ export default function Nav() {
   const badge = useRef(null)
   const panel = useRef(null)
   const prevN = useRef(n)
+  const acct = useAccount()
   const [pay, setPay] = useState({ busy: false, status: '', message: '' })
   const total = FLAVOURS.reduce((a, f) => a + (store.items[f.id] || 0) * f.price, 0)
 
   // Cart → server creates the Razorpay order from the cart → Razorpay Checkout → server verifies the signature
   const checkout = async () => {
-    if (pay.busy) return
+    if (pay.busy || !acct.loaded) return
+    if (!acct.signedIn) { rememberIntent({ type: 'pay' }); acct.signIn(); return } // paying needs an account
     setPay({ busy: true, status: '', message: '' })
     const items = FLAVOURS.filter((f) => store.items[f.id]).map((f) => ({ id: f.id, qty: store.items[f.id] }))
-    const r = await payCart(items)
+    const r = await payCart(items, acct.getToken)
     if (r.status === 'paid') items.forEach((i) => setQty(i.id, 0)) // paid and verified: the cart is done
     setPay({ busy: false, status: r.status, message: r.message + (r.status === 'paid' ? ' Payment id: ' + r.paymentId : '') })
   }
+
+  const resume = useRef()
+  resume.current = (i) => {
+    if ((i.type !== 'buy' && i.type !== 'pay') || i.handled) return
+    i.handled = true
+    if (i.type === 'buy') addToCart(i.id, i.qty) // Buy Now, picked up after sign-in: this product and quantity go into the cart
+    setCart(true)
+    if (i.type === 'pay') checkout()
+  }
+  useEffect(() => {
+    const on = (e) => resume.current(e.detail)
+    window.addEventListener('luma:resume', on)
+    return () => window.removeEventListener('luma:resume', on)
+  }, [])
 
   useEffect(() => { // the badge pops whenever something is added
     if (n > prevN.current && badge.current && !prefersReduced()) gsap.fromTo(badge.current, { scale: 1.9 }, { scale: 1, duration: 0.8, ease: 'elastic.out(1.2, 0.45)' })
@@ -111,6 +128,7 @@ export default function Nav() {
           <span className="nav-ind" ref={ind} aria-hidden="true" />
         </nav>
         <div className="nav-end">
+          <AccountButton />
           <div className="cart-wrap">
             <button className="cart-btn" onClick={() => setCart((v) => !v)} aria-expanded={cart} aria-label={`Cart, ${n} item${n === 1 ? '' : 's'}`}>
               <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 8h14l-1.2 11a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8Zm4 0V6.5a3 3 0 0 1 6 0V8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>

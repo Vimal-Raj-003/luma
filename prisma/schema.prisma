@@ -1,0 +1,112 @@
+// LUMA database (Neon Postgres). Money is stored in paise (₹1 = 100) so it matches what Razorpay expects.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // pooled connection, used by the app
+  directUrl = env("DIRECT_URL") // direct connection, used by migrations
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum OrderStatus {
+  CREATED
+  CONFIRMED
+  PREPARING
+  READY
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id            String   @id @default(cuid())
+  authUserId    String?  @unique // Clerk user id: one customer per auth account. NULL = a guest (name + mobile, no login)
+  name          String?
+  email         String?  @unique // optional: customers who sign up with a mobile number have no email
+  phone         String? // E.164, e.g. +919876543210
+  phoneVerified Boolean  @default(false) // true only when Clerk confirmed it with an OTP; a guest's number is never verified
+  orders        Order[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([phone])
+}
+
+model Product {
+  id          String      @id // the site's flavour id: strawberry, rose, ...
+  name        String
+  flavour     String
+  price       Int // paise
+  offerPrice  Int? // paise; the ₹1 offer (one unit per order), null when the product has no offer
+  image       String // default image path; an uploaded image (imageData) takes over
+  description String? // customer-facing text
+  active      Boolean     @default(true) // available to buy
+  archived    Boolean     @default(false) // removed from the shop but kept for order history
+  sortOrder   Int         @default(0) // order on the customer site, lowest first
+  imageData   Bytes? // uploaded image, stored in the database so it survives any deployment
+  imageType   String? // its mime type
+  items       OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Order {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id])
+  subtotal          Int // paise
+  shipping          Int           @default(0) // paise
+  total             Int // paise
+  paymentStatus     PaymentStatus @default(PENDING)
+  orderStatus       OrderStatus   @default(CREATED)
+  razorpayOrderId   String?       @unique
+  razorpayPaymentId String?
+  items             OrderItem[]
+  payments          Payment[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  productName String
+  quantity    Int
+  unitPrice   Int // paise
+
+  @@index([orderId])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  orderId           String
+  order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  razorpayOrderId   String
+  razorpayPaymentId String?
+  amount            Int // paise
+  currency          String        @default("INR")
+  status            PaymentStatus @default(PENDING)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([orderId])
+}
+
+// Small key/value switches the Super Admin controls (e.g. offer.enabled).
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

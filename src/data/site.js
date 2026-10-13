@@ -125,3 +125,6 @@ export const HERO_COPY = {
   chocolate: 'Dark cocoa ribbons and velvety chocolate ice cream, layered into a rich, indulgent Falooda.',
   dryfruit: 'Almonds, cashews and pistachio in kesar-infused layers: a rich, traditional Falooda with a golden finish.',
 }
+
+// The ₹1 launch offer: one Strawberry Falooda, shipping ₹0, ₹1 in total. The server prices it from the product's offerPrice in the database.
+export const OFFER = { id: 'strawberry', title: 'LUMA ₹1 Offer', price: 1, note: 'Strawberry Falooda · 1 per order' }

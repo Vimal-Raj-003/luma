@@ -317,7 +317,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .scene .h2 em { color: #ff9fbd; }
 .scene .eyebrow { color: var(--mango); }
 #flavours::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: clamp(140px, 18vw, 260px); z-index: 0; pointer-events: none; background: linear-gradient(to bottom, rgba(47, 15, 43, 0), var(--plum-2)); }
-#flavours { position: relative; }
+#flavours { position: relative; background: linear-gradient(to bottom, rgba(47, 15, 43, 0.94) 0, rgba(30, 9, 28, 0.8) 40%, rgba(47, 15, 43, 0.9) 100%), url('/assets/flavours/strawberry-bg.webp') 62% 50% / cover no-repeat, var(--plum-2); }
+/* only the section heading recolours, so it stays readable on the dark plum background */
+#flavours .sec-head .h2 { color: #fff6ea; }
+#flavours .sec-head .eyebrow { color: var(--mango); }
+#flavours .sec-head .lede { color: rgba(255, 246, 234, 0.78); }
 
 /* ----- One Glass ----- */
 .og { height: 100svh; min-height: 560px; background: radial-gradient(120% 90% at 50% 40%, #3b1237, #2f0f2b 72%); }
@@ -595,6 +599,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* Footer: the finale's plum / berry scene carries on underneath (it starts on the flat plum the CTA fades into, so there is no seam) */
 .footer { background: linear-gradient(to bottom, var(--plum-2) 0, rgba(30, 9, 28, 0.8) 240px, rgba(24, 6, 22, 0.92) 100%), url('/assets/flavours/strawberry-bg.webp') 62% 100% / cover no-repeat, var(--plum-2); }
+/* compact footer: height comes from its content only; the LUMA word is a faint decorative layer behind the text, not a block in the flow */
+.footer { padding: clamp(40px, 5vw, 64px) 0 20px; isolation: isolate; }
+.footer .f-top { gap: 1.8rem; }
+.footer .f-tag { margin-top: 0.7rem; font-size: 1.25rem; }
+.footer .f-cols { gap: 1.4rem 1.4rem; }
+.footer .f-cols a { padding-block: 3px; }
+.footer .f-word { position: absolute; left: 0; right: 0; bottom: 18px; z-index: -1; margin: 0; font-size: clamp(4rem, 17vw, 13rem); line-height: 0.8; pointer-events: none; background: linear-gradient(180deg, rgba(255, 244, 227, 0.07), rgba(255, 244, 227, 0.015)); -webkit-background-clip: text; background-clip: text; }
+.footer .f-bot { margin-top: clamp(28px, 4vw, 48px); padding-top: 1rem; padding-right: 76px; }
+@media (min-width: 800px) { .footer .f-cols { grid-template-columns: repeat(4, auto); gap: 1.6rem 3rem; } }
 .footer::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(closest-side at 16% 62%, rgba(240, 112, 155, 0.16), transparent), radial-gradient(closest-side at 86% 30%, rgba(255, 190, 59, 0.09), transparent), radial-gradient(closest-side at 60% 100%, rgba(199, 59, 114, 0.18), transparent); }
 
 /* Flavour cards: one premium system for every product. The flavour's own cinematic backdrop fills the top of the card
@@ -620,3 +633,79 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .card[data-flavour='pistachio']::before { filter: brightness(1.4) saturate(0.7); }
 .cart-msg { margin-top: 10px; font-size: 0.82rem; line-height: 1.45; color: var(--rose-d); text-align: center; overflow-wrap: anywhere; }
 .cart-msg.ok { color: #2f7a3e; font-size: 0.9rem; padding: 8px 4px; margin: 0; }
+.acct-slot { display: grid; place-items: center; width: 44px; height: 44px; }
+
+/* The ₹1 offer card, above the flavour cards */
+.offer { position: relative; display: grid; gap: 8px; align-items: center; margin-bottom: 20px; padding: 26px 24px 22px; border-radius: 30px; overflow: hidden; isolation: isolate; color: var(--cream); background: radial-gradient(ellipse 60% 90% at 88% 50%, rgba(240, 112, 155, 0.5), transparent 70%), linear-gradient(135deg, #4a1942, #2f0f2b); box-shadow: 0 24px 50px -30px rgba(74, 25, 66, 0.7); }
+.offer-copy { position: relative; z-index: 1; }
+.offer-title { font-family: var(--serif); font-weight: 500; font-size: clamp(1.7rem, 5vw, 2.6rem); line-height: 1.05; margin-top: 6px; }
+.offer-price { margin-top: 10px; font-size: 1rem; color: #ffd0de; }
+.offer-price b { font-family: var(--serif); font-weight: 500; font-size: clamp(2.2rem, 7vw, 3.4rem); color: #fff; margin-right: 6px; }
+.offer-ship { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
+.offer-ship span { padding: 5px 14px; border-radius: 999px; background: rgba(169, 213, 139, 0.2); border: 1px solid rgba(169, 213, 139, 0.5); color: #dff3cf; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.04em; }
+.offer-ship i { font-style: normal; font-size: 0.85rem; color: rgba(255, 246, 234, 0.7); }
+.offer-btn { margin-top: 18px; min-width: 160px; }
+.offer-msg { margin-top: 12px; max-width: 46ch; font-size: 0.88rem; line-height: 1.45; color: #ffd0de; overflow-wrap: anywhere; }
+.offer-msg.ok { color: #c9f0b0; }
+.offer-art { position: relative; z-index: 0; height: 190px; justify-self: center; aspect-ratio: calc(840 / var(--oh, 1342)); }
+.offer-art .pg { height: 100%; width: 100%; }
+@media (min-width: 720px) {
+  .offer { grid-template-columns: 1fr auto; padding: 30px 40px; gap: 24px; margin-bottom: 26px; }
+  .offer-art { height: 250px; order: 2; }
+}
+
+/* Account area in the navbar: Sign In / Create Account (wide screens) or a small menu behind the person icon (narrow screens) */
+.acct-wrap { position: relative; display: flex; align-items: center; }
+.acct-menu { position: absolute; right: 0; top: calc(100% + 10px); z-index: 5; display: grid; min-width: 230px; max-width: calc(100vw - 32px); padding: 8px; border-radius: 18px; background: #fff; box-shadow: 0 24px 50px -20px rgba(47, 15, 43, 0.5); border: 1px solid var(--line); }
+.acct-menu button { display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 14px; border: 0; border-radius: 12px; background: transparent; color: var(--ink); font-weight: 600; font-size: 0.92rem; }
+.acct-menu button:hover { background: rgba(240, 112, 155, 0.12); }
+@media (max-width: 679px) { .acct-wrap { position: static; } .acct-menu { position: fixed; right: 16px; top: 66px; } }
+
+/* "Create your LUMA account" / "Sign in to LUMA" window */
+.acd { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 16px; }
+.acd-back { position: absolute; inset: 0; background: rgba(30, 9, 28, 0.62); backdrop-filter: blur(4px); }
+.acd-panel { position: relative; width: min(400px, 100%); padding: 34px 28px 26px; border-radius: 26px; background: #fff9f1; color: var(--ink); text-align: center; box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.6); }
+.acd-x { position: absolute; right: 14px; top: 14px; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; border: 0; background: rgba(74, 25, 66, 0.07); color: var(--plum); }
+.acd-panel h2 { font-family: var(--serif); font-weight: 500; font-size: 1.7rem; line-height: 1.15; color: var(--plum); }
+.acd-sub { margin-top: 6px; color: var(--muted); font-size: 0.92rem; }
+.acd-google { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 52px; margin-top: 22px; border-radius: 999px; border: 1.5px solid rgba(74, 25, 66, 0.2); background: #fff; color: #2b0f27; font-weight: 700; font-size: 1rem; box-shadow: 0 10px 24px -16px rgba(47, 15, 43, 0.5); transition: box-shadow 0.3s, transform 0.2s; }
+.acd-google:hover { box-shadow: 0 14px 28px -14px rgba(47, 15, 43, 0.6); }
+.acd-google:disabled, .acd-email:disabled { opacity: 0.6; cursor: wait; }
+.acd-email { margin-top: 16px; padding: 6px 10px; border: 0; background: transparent; color: var(--rose-d); font-weight: 700; font-size: 0.95rem; text-decoration: underline; text-underline-offset: 3px; }
+.acd-err { margin-top: 10px; color: var(--rose-d); font-size: 0.85rem; line-height: 1.4; }
+.acd-switch { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; }
+.acd-switch button { border: 0; background: transparent; color: var(--rose-d); font-weight: 700; font-size: inherit; }
+
+/* Mobile OTP form inside the account window */
+.acd-panel form { text-align: left; }
+.acd-panel h2, .acd-sub { text-align: center; }
+.acd-sub b { color: var(--plum); }
+.acd-field { display: block; margin-top: 16px; }
+.acd-field > span:first-child { display: block; margin-bottom: 6px; font-size: 0.82rem; font-weight: 700; color: var(--plum); }
+.acd-field input, .acd-otp { width: 100%; min-height: 50px; padding: 0 16px; border-radius: 14px; border: 1.5px solid rgba(74, 25, 66, 0.2); background: #fff; color: var(--ink); font-size: 1rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.acd-field input:focus, .acd-otp:focus { border-color: var(--rose-d); box-shadow: 0 0 0 4px rgba(199, 59, 114, 0.14); }
+.acd-phone { display: flex; align-items: stretch; border-radius: 14px; border: 1.5px solid rgba(74, 25, 66, 0.2); background: #fff; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; }
+.acd-phone:focus-within { border-color: var(--rose-d); box-shadow: 0 0 0 4px rgba(199, 59, 114, 0.14); }
+.acd-phone b { display: grid; place-items: center; padding: 0 14px; background: rgba(74, 25, 66, 0.07); color: var(--plum); font-weight: 700; }
+.acd-phone input { border: 0; border-radius: 0; box-shadow: none; flex: 1; min-width: 0; }
+.acd-otp { margin-top: 18px; text-align: center; font-family: var(--mono, ui-monospace, monospace); font-size: 1.6rem; letter-spacing: 0.5em; padding-left: calc(16px + 0.5em); }
+.acd-primary { width: 100%; margin-top: 18px; min-height: 52px; }
+.acd-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.acd-or { position: relative; margin: 20px 0 4px; text-align: center; color: var(--muted); font-size: 0.8rem; }
+.acd-or::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--line); }
+.acd-or span { position: relative; padding: 0 12px; background: #fff9f1; }
+.acd-panel .acd-google { margin-top: 12px; min-height: 48px; font-size: 0.95rem; }
+.acd-panel .acd-email { display: block; margin: 10px auto 0; }
+.acd-link { border: 0; background: transparent; padding: 0; color: var(--rose-d); font-weight: 700; font-size: inherit; text-decoration: underline; }
+.acd-note { margin-top: 10px; text-align: center; color: #2f7a3e; font-size: 0.85rem; }
+.acd-err { text-align: center; }
+.acd-switch { text-align: center; }
+.acd-switch button:disabled { opacity: 0.5; }
+
+/* the account icon: a person when logged out, the customer's initial when logged in; its menu has a small header with the customer's name */
+.acct-avatar { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--rose-d); color: #fff; font-weight: 800; font-size: 0.95rem; box-shadow: 0 6px 16px -8px rgba(199, 59, 114, 0.9); }
+.acct-who { display: grid; gap: 2px; padding: 10px 14px 12px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+.acct-who strong { font-family: var(--serif); font-weight: 500; font-size: 1.1rem; color: var(--plum); overflow-wrap: anywhere; }
+.acct-who small { color: var(--muted); font-size: 0.8rem; overflow-wrap: anywhere; }
+.acct-menu hr { border: 0; height: 1px; margin: 6px 4px; background: var(--line); }
+.acct-menu button svg { flex: none; color: var(--rose-d); }

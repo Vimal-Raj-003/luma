@@ -1,3 +1,5 @@
+import { catalog } from '../catalog'
+
 const BASE = import.meta.env.BASE_URL
 
 /*
@@ -7,7 +9,8 @@ const BASE = import.meta.env.BASE_URL
 */
 // the photograph's own backdrop for this flavour (bokeh, fruit, table), glass removed and extended: used as the section background
 export const FLAVOUR_BG = (id) => `${BASE}assets/flavours/${id}-bg.webp`
-export const FLAVOUR_IMG = (id) => `${BASE}assets/flavours/${id}.webp`
+// an image the Super Admin uploaded for this product wins over the built-in artwork
+export const FLAVOUR_IMG = (id) => catalog.images[id] || `${BASE}assets/flavours/${id}.webp`
 
 export default function PhotoGlass({ flavour = 'strawberry', className = '' }) {
   return (

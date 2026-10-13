@@ -4,6 +4,7 @@ import PhotoGlass from './PhotoGlass'
 import { SITE } from '../data/site'
 import { addToCart, toggleWish, useStore } from '../store'
 import { lockScroll, prefersReduced } from '../hooks/motion'
+import { rememberIntent, useAccount } from '../auth'
 
 export const Heart = () => (
   <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.4-9.3C1.3 8.4 3.2 5 6.6 5c2 0 3.7 1.1 5.4 3.2C13.7 6.1 15.4 5 17.4 5c3.4 0 5.3 3.4 4 6.7C19.5 16.4 12 21 12 21Z" /></svg>
@@ -31,6 +32,7 @@ export default function ProductSheet({ f, onClose }) {
   const store = useStore()
   const wished = store.wish.includes(f.id)
   const closing = useRef(false)
+  const acct = useAccount()
 
   const close = () => {
     if (closing.current) return
@@ -69,12 +71,22 @@ export default function ProductSheet({ f, onClose }) {
   }, [])
 
   // Buy Now: this product and quantity go into the existing cart, the sheet closes and the existing cart / checkout panel opens
-  const buy = () => {
+  const go = () => {
     addToCart(f.id, qty)
     closing.current = true
     onClose()
     window.dispatchEvent(new Event('luma:cart'))
   }
+  const buy = () => {
+    if (!acct.loaded) return
+    if (!acct.signedIn) { rememberIntent({ type: 'buy', id: f.id, qty }); acct.signIn(); return } // buying needs an account; browsing does not
+    go()
+  }
+  useEffect(() => { // the navbar replays the purchase once they are signed in; this sheet just steps aside
+    const done = () => { closing.current = true; onClose() }
+    window.addEventListener('luma:resume', done)
+    return () => window.removeEventListener('luma:resume', done)
+  }, [])
   const heart = (e) => {
     toggleWish(f.id)
     if (!wished && !prefersReduced()) burst(e.currentTarget)

@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import PhotoGlass, { FLAVOUR_BG } from './PhotoGlass'
 import AddToCart from './AddToCart'
+import OfferCard from './OfferCard'
 import ProductSheet, { Heart, burst } from './ProductSheet'
 import { toggleWish, useStore } from '../store'
 import { prefersReduced } from '../hooks/motion'
 import { FLAVOURS, SITE } from '../data/site'
+
+const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'] // the heading counts what is on sale
 
 export function SectionHead({ eyebrow, title, children, center = false }) {
   return (
@@ -28,14 +31,16 @@ export default function Flavours() {
   return (
     <section className="section" id="flavours">
       <div className="wrap">
-        <SectionHead eyebrow="The menu" title={<>Six signature <em>flavours.</em></>}>
+        <SectionHead eyebrow="The menu" title={<>{WORDS[FLAVOURS.filter((f) => f.active !== false).length] || 'Our'} signature <em>flavours.</em></>}>
           Every Falooda is layered to order and served chilled.
         </SectionHead>
 
+        <OfferCard />
+
         <ul className="cards">
-          {FLAVOURS.map((f, i) => (
+          {FLAVOURS.filter((f) => f.active !== false).map((f, i) => (
             <li key={f.id}>
-              <article className="card" data-flavour={f.id} style={{ '--glow': f.glow, '--bg': `url(${FLAVOUR_BG(f.id)})` }} onClick={(e) => !e.target.closest('a, button') && setSheet(f)}>
+              <article className="card" data-flavour={f.id} style={{ '--glow': f.glow, '--bg': f.custom ? 'linear-gradient(160deg, #5a2152, #c73b72 72%, #f0709b)' : `url(${FLAVOUR_BG(f.id)})` }} onClick={(e) => !e.target.closest('a, button') && setSheet(f)}>
                 <button className="card-heart" aria-pressed={store.wish.includes(f.id)} aria-label={`${store.wish.includes(f.id) ? 'Remove' : 'Save'} ${f.name} ${store.wish.includes(f.id) ? 'from' : 'to'} wishlist`} onClick={(e) => wish(e, f.id)}><Heart /></button>
                 <span className="card-no">0{i + 1}</span>
                 <div className="card-media">

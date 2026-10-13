@@ -3,6 +3,7 @@ import { Logo } from './Nav'
 import InfoSheet from './InfoSheet'
 import { FLAVOURS, SITE } from '../data/site'
 import { addToCart, toggleWish, useStore } from '../store'
+import { openAccount, useAccount } from '../auth'
 
 const todo = (what) => (
   <>
@@ -14,11 +15,23 @@ const todo = (what) => (
 // footer destinations that open a sheet instead of a separate page (the site is a single page, with no accounts or checkout yet)
 const SHEETS = {
   login: { title: 'Login', body: () => <p className="is-sub">Accounts are not available yet. When they are, you will sign in here to see your orders and saved flavours.</p> },
-  orders: { title: 'My Orders', body: () => <p className="is-sub">Order history will appear here once ordering is live.</p> },
+  orders: { title: 'My Orders', body: Orders },
   shipping: { title: 'Shipping Policy', body: () => todo('shipping policy') },
   refund: { title: 'Refund Policy', body: () => todo('refund policy') },
   privacy: { title: 'Privacy Policy', body: () => todo('privacy policy') },
   terms: { title: 'Terms & Conditions', body: () => todo('terms and conditions') },
+}
+
+/* Order history is only for a verified account. A name + mobile (guest) customer is never shown orders: anyone could type someone else's number. */
+function Orders() {
+  const acct = useAccount()
+  if (acct.member) return <p className="is-sub">Order history will appear here once ordering is live.</p>
+  return (
+    <>
+      <p className="is-sub">{acct.guest ? 'You are shopping as a guest, so your past orders are not shown here.' : 'Sign in to see your orders.'} For your privacy, order history needs a verified sign-in.</p>
+      <button className="btn btn-rose btn-sm" onClick={() => openAccount('signin')}>Sign in securely</button>
+    </>
+  )
 }
 
 function Wishlist() {
@@ -83,7 +96,6 @@ export default function Footer() {
         <div className="f-word" aria-hidden="true">LUMA</div>
         <div className="f-bot">
           <span>© {new Date().getFullYear()} LUMA. All rights reserved.</span>
-          <span>Crafted in layers.</span>
         </div>
       </div>
       {s && <InfoSheet title={s.title} onClose={() => setSheet(null)}><s.body /></InfoSheet>}
