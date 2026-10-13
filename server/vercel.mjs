@@ -13,6 +13,16 @@ async function rawBody(req) {
   return Buffer.concat(chunks)
 }
 
+/* vercel.json rewrites /api/:path* to /api?__p=:path*. Depending on the platform, req.url then shows either the original path or the rewritten one, so the real route is
+   rebuilt from __p when it is present (original query string kept) and req.url is used as it is otherwise (local dev, scripts, tests). */
+function realUrl(url) {
+  const u = new URL(url || '/', 'http://x')
+  const p = u.searchParams.get('__p')
+  if (p === null) return url
+  u.searchParams.delete('__p')
+  return '/api/' + p.replace(/^\/+/, '') + u.search
+}
+
 const json = (res, code, body) => { res.statusCode = code; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(body)) }
 
 export default async function handler(req, res) {
@@ -22,7 +32,7 @@ export default async function handler(req, res) {
       body = Buffer.isBuffer(req.body) ? req.body : Buffer.from(typeof req.body === 'string' ? req.body : JSON.stringify(req.body))
     }
     const r = Readable.from(body.length ? [body] : [])
-    Object.assign(r, { method: req.method, url: req.url, headers: req.headers, socket: req.socket, connection: req.socket })
+    Object.assign(r, { method: req.method, url: realUrl(req.url), headers: req.headers, socket: req.socket, connection: req.socket })
     // the function is finished when the response is: wait for it, so the platform does not freeze the instance mid-request
     await new Promise((done) => {
       res.once('finish', done)
