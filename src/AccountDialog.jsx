@@ -64,8 +64,15 @@ export default function AccountDialog() {
   const google = async () => {
     setBusy(true); setErr('')
     try { // Clerk's sign-in start also creates the account when this Google user is new
+      if (!signIn) throw Object.assign(new Error('sign-in is still loading'), { errors: [{ code: 'not_loaded' }] })
       await signIn.authenticateWithRedirect({ strategy: 'oauth_google', redirectUrl: '/sso-callback', redirectUrlComplete: here() })
-    } catch (x) { console.error('[auth] Google sign-in failed', x); setErr('Google sign-in could not start. Please try again.'); setBusy(false) }
+    } catch (x) {
+      const code = x?.errors?.[0]?.code
+      console.error('[auth] Google sign-in failed:', code || x?.message, x)
+      if (code === 'session_exists' || clerk.session) { setMode(null); setBusy(false); return } // already signed in: there is nothing to start
+      setErr(`Google sign-in could not start (${code || x?.message || 'unknown reason'}). Please try again, or use email instead.`) // the reason is shown so a failure can be diagnosed
+      setBusy(false)
+    }
   }
   const email = () => {
     setMode(null)
