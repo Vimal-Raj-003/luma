@@ -1,5 +1,8 @@
-/* Browser side of paying: ask the server for an order, open Razorpay Checkout, send the result back to the server to be verified.
-   Resolves to { status: 'paid' | 'failed' | 'cancelled' | 'error', message, ... }. The server decides what is paid; this only reports. */
+/* Browser side of paying. The customer chooses in LUMA's "Payment Options" window (payBridge / PaymentDialog):
+     UPI                           -> a QR that pays LUMA's UPI ID for the amount the server calculated. Nothing can verify a QR payment, so it is never reported as paid.
+     Cards, Netbanking and Wallet  -> Razorpay Checkout (UPI is switched off inside it): the server creates the order, Razorpay collects the payment, the server verifies the signature.
+   Resolves to { status: 'paid' | 'pending' | 'failed' | 'cancelled' | 'error', message, ... }. The server decides what is paid; this only reports. */
+import { bridge } from './payBridge'
 const SCRIPT = 'https://checkout.razorpay.com/v1/checkout.js'
 
 const loadScript = () => new Promise((ok, no) => {
@@ -17,11 +20,11 @@ const post = async (url, body, token) => {
   return data
 }
 
-async function payOrder(request, getToken) {
-  let order, token
+/* Cards, Netbanking and Wallet through Razorpay */
+async function payRazorpay(request, token) {
+  let order
   try {
     await loadScript()
-    token = await getToken()
     order = await post('/api/create-order', request, token)
   } catch (e) {
     console.error('[checkout]', e)
@@ -38,6 +41,8 @@ async function payOrder(request, getToken) {
       name: 'LUMA',
       description: order.description,
       theme: { color: '#C73B72' },
+      method: { upi: false },
+      config: { display: { hide: [{ method: 'upi' }] } }, // UPI is paid through LUMA's own UPI QR, not Razorpay's
       handler: async (resp) => {
         try {
           const v = await post('/api/verify-payment', resp, token)
@@ -57,6 +62,16 @@ async function payOrder(request, getToken) {
     })
     rzp.open()
   })
+}
+
+async function payOrder(request, getToken) {
+  let token
+  try { token = await getToken() } catch (e) { return { status: 'error', message: e.message } }
+  if (!bridge.open) return payRazorpay(request, token) // the LUMA payment window is not on this page: Razorpay, as before
+  const pick = await bridge.open({ start: () => post('/api/upi/start', request, token) }) // start: the server prices the order and returns the UPI link
+  if (pick.method === 'upi') return pick.result
+  if (pick.method === 'razorpay') return payRazorpay(request, token)
+  return { status: 'cancelled', message: 'Payment cancelled. You can try again.' }
 }
 
 export const payCart = (items, getToken) => payOrder({ items }, getToken) // the cart

@@ -15,7 +15,7 @@ import { offerEnabled } from './settings.mjs'
 loadEnv()
 
 const OFFER_PRODUCT = 'strawberry' // the ₹1 offer is this product at its offerPrice, quantity 1, shipping ₹0
-const SHIPPING = 0 // paise
+export const SHIPPING = 0 // paise
 const RETRY_WINDOW_MS = 60 * 60 * 1000
 
 const send = (res, code, body) => { res.statusCode = code; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(body)) }
@@ -38,7 +38,7 @@ const rzp = async (path, { id, secret }, init = {}) => {
 const sig = (lines) => lines.map((l) => `${l.productId}:${l.quantity}:${l.unitPrice}`).sort().join('|')
 
 /* the lines of this purchase, priced from the DB */
-async function buildLines(body) {
+export async function buildLines(body) { // (exported so the UPI QR prices a purchase exactly the same way)
   if (body.offer) {
     if (!(await offerEnabled())) throw bad('The ₹1 offer is not available right now.')
     const p = await db.product.findUnique({ where: { id: OFFER_PRODUCT } })

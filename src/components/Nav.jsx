@@ -3,6 +3,7 @@ import gsap from 'gsap'
 import { FLAVOURS, SITE } from '../data/site'
 import { addToCart, cartCount, setQty, useStore } from '../store'
 import { payCart } from '../checkout'
+import PaymentDialog from '../PaymentDialog'
 import { AccountButton, rememberIntent, useAccount } from '../auth'
 import { prefersReduced } from '../hooks/motion'
 
@@ -130,6 +131,7 @@ export default function Nav() {
         </nav>
         <div className="nav-end">
           <AccountButton />
+          <PaymentDialog />
           <div className="cart-wrap">
             <button className="cart-btn" onClick={() => setCart((v) => !v)} aria-expanded={cart} aria-label={`Cart, ${n} item${n === 1 ? '' : 's'}`}>
               <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 8h14l-1.2 11a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8Zm4 0V6.5a3 3 0 0 1 6 0V8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
