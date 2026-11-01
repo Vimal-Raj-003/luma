@@ -1,7 +1,7 @@
-/* LUMA's "Payment Options" window, shown when a customer pays (Buy Now, the cart, the ₹1 offer). Mounted once (in the navbar), opened through payBridge.
-     UPI                           -> a QR for the exact amount the SERVER calculated, paying LUMA's UPI ID (any UPI app can scan it)
-     Cards, Netbanking & Wallet    -> hands back to checkout.js, which opens Razorpay (UPI is switched off inside it)
-   The QR is drawn here from the link the server returned. This window never says a QR payment succeeded: nothing can verify it. */
+/* LUMA's UPI payment window, shown when a customer pays (Buy Now, the cart, the ₹1 offer). Mounted once (in the navbar), opened through payBridge.
+   It opens straight onto the UPI QR: there is no "Payment Options" selection screen. The QR is for the exact amount the SERVER calculated and pays LUMA's UPI ID
+   (any UPI app can scan it). It is drawn here from the link the server returned. This window never says a QR payment succeeded: nothing can verify it.
+   (The Razorpay path for Cards, Netbanking & Wallet is still in checkout.js; this window simply does not offer it.) */
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import qrcode from 'qrcode-generator'
@@ -22,16 +22,31 @@ function QR({ text }) {
 
 export default function PaymentDialog() {
   const [open, setOpen] = useState(false)
-  const [screen, setScreen] = useState('choose') // choose | loading | qr
+  const [screen, setScreen] = useState('loading') // loading | qr | error
   const [d, setD] = useState(null) // { orderId, ref, amount, link, upiId, payee }
   const [err, setErr] = useState('')
   const ctx = useRef(null) // { start, resolve }
   const first = useRef(null)
-  const screenRef = useRef('choose')
+  const screenRef = useRef('loading')
   screenRef.current = screen
 
+  // ask the server to price the order and return the UPI link; the amount in the QR is exactly what it returns
+  const begin = async () => {
+    const mine = ctx.current
+    if (!mine) return
+    setScreen('loading'); setErr('')
+    try {
+      const o = await mine.start()
+      if (ctx.current !== mine) return // the window was closed while waiting
+      setD(o); setScreen('qr')
+    } catch (e) {
+      if (ctx.current !== mine) return
+      setErr(e.message); setScreen('error')
+    }
+  }
+
   useEffect(() => {
-    bridge.open = (c) => new Promise((resolve) => { ctx.current = { ...c, resolve }; setScreen('choose'); setD(null); setErr(''); setOpen(true) })
+    bridge.open = (c) => new Promise((resolve) => { ctx.current = { ...c, resolve }; setD(null); setErr(''); setScreen('loading'); setOpen(true); begin() })
     return () => { bridge.open = null }
   }, [])
 
@@ -49,11 +64,6 @@ export default function PaymentDialog() {
     return () => window.removeEventListener('keydown', key, true)
   }, [open, screen])
 
-  const chooseUpi = async () => {
-    setScreen('loading'); setErr('')
-    try { setD(await ctx.current.start()); setScreen('qr') } catch (e) { setErr(e.message); setScreen('choose') } // the server prices it; the amount in the QR is exactly this
-  }
-
   if (!open) return null
   return createPortal(
     (
@@ -64,17 +74,16 @@ export default function PaymentDialog() {
             <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" /></svg>
           </button>
 
-          {screen === 'choose' && (
+          {screen === 'loading' && (<><h2 id="pay-title">Pay with UPI</h2><p className="pay-sub" role="status">Preparing your payment…</p></>)}
+
+          {screen === 'error' && (
             <>
-              <h2 id="pay-title">Payment Options</h2>
-              <p className="pay-sub">How would you like to pay?</p>
-              <button ref={first} className="pay-opt" onClick={chooseUpi}><b>UPI</b><span>Google Pay, PhonePe, Paytm or any UPI app: scan a QR code</span></button>
-              <button className="pay-opt" onClick={() => finish({ method: 'razorpay' })}><b>Cards, Netbanking &amp; Wallet</b><span>Secure payment through Razorpay</span></button>
-              {err && <p className="pay-err" role="alert">{err}</p>}
+              <h2 id="pay-title">Pay with UPI</h2>
+              <p className="pay-err" role="alert">{err}</p>
+              <button ref={first} className="btn btn-rose pay-go" onClick={begin}>Try again</button>
+              <button className="btn btn-dark pay-go" onClick={close}>Close</button>
             </>
           )}
-
-          {screen === 'loading' && (<><h2 id="pay-title">UPI</h2><p className="pay-sub" role="status">Preparing your payment…</p></>)}
 
           {screen === 'qr' && d && (
             <>
