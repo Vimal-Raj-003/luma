@@ -12,6 +12,7 @@ datasource db {
 
 enum PaymentStatus {
   PENDING
+  SUBMITTED // direct UPI: the customer entered a UTR, the Super Admin has not yet checked the bank credit
   PAID
   FAILED
 }
@@ -94,8 +95,13 @@ model Payment {
   id                String        @id @default(cuid())
   orderId           String
   order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  razorpayOrderId   String
+  razorpayOrderId   String? // null for a direct UPI payment
   razorpayPaymentId String?
+  method            String        @default("RAZORPAY") // RAZORPAY | UPI
+  utr               String?       @unique // the 12-digit UPI reference the customer submitted (direct UPI only)
+  utrSubmittedAt    DateTime?
+  decidedAt         DateTime? // when the Super Admin confirmed or rejected it
+  adminNote         String?
   amount            Int // paise
   currency          String        @default("INR")
   status            PaymentStatus @default(PENDING)

@@ -13,7 +13,7 @@ export default function OfferCard() {
   const start = async () => {
     setSt({ busy: true, status: '', message: '' })
     const r = await payOffer(acct.getToken)
-    setSt({ busy: false, status: r.status, message: r.status === 'paid' ? `Payment successful. Thank you! Payment id: ${r.paymentId}` : r.message })
+    setSt({ busy: false, status: r.status, message: r.status === 'paid' ? `Payment Successful ✓${r.paymentId ? ' Payment id: ' + r.paymentId : ''}` : r.message })
   }
   const go = useRef()
   go.current = start

@@ -6,6 +6,7 @@ import { offerEnabled } from './settings.mjs'
 import { createGuest } from './guest.mjs'
 import { myOrders } from './orders.mjs'
 import { health } from './health.mjs'
+import { webhookApi } from './rzpWebhook.mjs'
 import { db } from './db.mjs'
 
 const send = (res, code, body) => { res.statusCode = code; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(body)) }
@@ -37,5 +38,5 @@ export function api(req, res, next) {
       res.statusCode = 200; res.setHeader('Content-Type', p.imageType); res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); res.end(Buffer.from(p.imageData))
     }).catch(fail)
   }
-  return razorpayApi(req, res, next)
+  return webhookApi(req, res, () => razorpayApi(req, res, next))
 }

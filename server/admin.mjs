@@ -61,9 +61,8 @@ async function overview(url) {
   }
 }
 
-async function orders(url) {
-  const f = url.searchParams.get('filter') || 'all'
-  const where = { paid: { paymentStatus: 'PAID' }, pending: { paymentStatus: 'PENDING', orderStatus: { not: 'CANCELLED' } }, failed: { paymentStatus: 'FAILED', orderStatus: { not: 'CANCELLED' } }, cancelled: { orderStatus: 'CANCELLED' } }[f] || {}
+async function orders() { // only orders whose payment Razorpay confirmed and the server verified
+  const where = { paymentStatus: 'PAID' }
   const rows = await db.order.findMany({ where, orderBy: { createdAt: 'desc' }, take: 300, include: { user: { select: { name: true, email: true, phone: true } }, items: true } })
   return { orders: rows.map((o) => ({
     id: o.id, customer: o.user.name || '', email: o.user.email || o.user.phone || '',
@@ -85,7 +84,7 @@ async function setOrderStatus(id, body) {
 }
 
 async function payments() {
-  const rows = await db.payment.findMany({ orderBy: { createdAt: 'desc' }, take: 300, include: { order: { select: { id: true, orderStatus: true, user: { select: { name: true, email: true, phone: true } } } } } })
+  const rows = await db.payment.findMany({ where: { status: 'PAID' }, orderBy: { createdAt: 'desc' }, take: 300, include: { order: { select: { id: true, orderStatus: true, user: { select: { name: true, email: true, phone: true } } } } } })
   return { payments: rows.map((p) => ({
     id: p.id, orderId: p.order.id, customer: p.order.user.name || '', email: p.order.user.email || p.order.user.phone || '', amount: p.amount,
     razorpayPaymentId: p.razorpayPaymentId, razorpayOrderId: p.razorpayOrderId, status: paymentView(p), createdAt: p.createdAt, updatedAt: p.updatedAt,
@@ -185,7 +184,7 @@ export function adminApi(req, res) {
     let r, hit
     if (path === '/api/admin/me' && m === 'GET') r = { admin: true }
     else if (path === '/api/admin/overview' && m === 'GET') r = await overview(url)
-    else if (path === '/api/admin/orders' && m === 'GET') r = await orders(url)
+    else if (path === '/api/admin/orders' && m === 'GET') r = await orders()
     else if ((hit = /^\/api\/admin\/orders\/([\w-]+)$/.exec(path)) && m === 'PATCH') r = await setOrderStatus(hit[1], await readJson(req))
     else if (path === '/api/admin/payments' && m === 'GET') r = await payments()
     else if (path === '/api/admin/customers' && m === 'GET') r = await customers()

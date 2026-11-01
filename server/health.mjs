@@ -3,7 +3,7 @@
 import { db } from './db.mjs'
 
 const REQUIRED = ['DATABASE_URL', 'CLERK_SECRET_KEY', 'RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET', 'SUPER_ADMIN_EMAIL']
-const OPTIONAL = ['DIRECT_URL', 'GUEST_TOKEN_SECRET'] // DIRECT_URL is only for migrations; GUEST_TOKEN_SECRET falls back to the Clerk secret
+const OPTIONAL = ['DIRECT_URL', 'GUEST_TOKEN_SECRET', 'RAZORPAY_WEBHOOK_SECRET'] // DIRECT_URL is only for migrations; GUEST_TOKEN_SECRET falls back to the Clerk secret
 const EXPECTED = new Set([...REQUIRED, ...OPTIONAL])
 const state = (k) => { const v = process.env[k]; return v === undefined ? 'missing' : v.trim() === '' ? 'empty' : 'set' }
 const kind = (k, prefixes) => { const v = (process.env[k] || '').trim(); return prefixes.find((p) => v.startsWith(p)) || (v ? 'unrecognised' : null) }

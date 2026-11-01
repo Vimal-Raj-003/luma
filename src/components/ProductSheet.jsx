@@ -76,7 +76,7 @@ export default function ProductSheet({ f, onClose }) {
   const payNow = async () => {
     setPay({ busy: true, status: '', message: '' })
     const r = await payCart([{ id: f.id, qty }], acct.getToken)
-    setPay({ busy: false, status: r.status, message: r.status === 'paid' ? `Payment successful. Thank you! Payment id: ${r.paymentId}` : r.message })
+    setPay({ busy: false, status: r.status, message: r.status === 'paid' ? `Payment Successful ✓${r.paymentId ? ' Payment id: ' + r.paymentId : ''}` : r.message })
   }
   const go = useRef()
   go.current = payNow

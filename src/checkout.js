@@ -41,7 +41,7 @@ async function payOrder(request, getToken) {
       handler: async (resp) => {
         try {
           const v = await post('/api/verify-payment', resp, token)
-          done({ status: 'paid', message: 'Payment successful.', paymentId: v.paymentId, orderId: v.orderId, dbOrderId: v.dbOrderId, amount: v.amount })
+          done({ status: 'paid', message: 'Payment Successful ✓', paymentId: v.paymentId, orderId: v.orderId, dbOrderId: v.dbOrderId, amount: v.amount })
         } catch (e) {
           console.error('[checkout] verification failed', e)
           done({ status: 'failed', message: `We could not verify this payment (${e.message}). If money was deducted, contact us with payment id ${resp.razorpay_payment_id}.` })

@@ -2,7 +2,8 @@
    /api/admin call, so this page shows nothing to anyone else even if its code is opened. */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useClerk } from '@clerk/clerk-react'
-import { useAccount } from '../auth'
+import { openAccount, useAccount } from '../auth'
+import AccountDialog from '../AccountDialog'
 import { DayChart, Donut, Empty, SalesBars, rupees } from './charts'
 import './admin.css'
 
@@ -73,11 +74,9 @@ function Dashboard({ api }) {
   )
 }
 
-const FILTERS = ['all', 'paid', 'pending', 'failed', 'cancelled']
 const FLOW = ['CONFIRMED', 'PREPARING', 'READY', 'SHIPPED', 'DELIVERED', 'CANCELLED']
 function Orders({ api }) {
-  const [filter, setFilter] = useState('all')
-  const [st, reload] = useLoad(api, `/api/admin/orders?filter=${filter}`)
+  const [st, reload] = useLoad(api, '/api/admin/orders')
   const [msg, setMsg] = useState('')
   const change = async (o, orderStatus) => {
     setMsg('')
@@ -86,12 +85,10 @@ function Orders({ api }) {
   }
   return (
     <>
-      <header className="ad-head"><h1>Orders</h1>
-        <div className="ad-seg" role="group" aria-label="Filter">{FILTERS.map((f) => <button key={f} className={filter === f ? 'on' : ''} onClick={() => setFilter(f)}>{cap(f)}</button>)}</div>
-      </header>
+      <header className="ad-head"><h1>Paid Orders</h1></header>
       {msg && <p className="ad-err" role="alert">{msg}</p>}
       <State st={st}>{() => (<>
-        {!st.data.orders.length ? <Empty>No orders here yet</Empty> : (
+        {!st.data.orders.length ? <Empty>No paid orders yet</Empty> : (
           <div className="ad-table"><table>
             <thead><tr><th>Order ID</th><th>Customer</th><th>Email</th><th>Products</th><th>Qty</th><th>Subtotal</th><th>Shipping</th><th>Total</th><th>Payment</th><th>Order status</th><th>Razorpay Order ID</th><th>Razorpay Payment ID</th><th>Created</th></tr></thead>
             <tbody>{st.data.orders.map((o) => (
@@ -113,7 +110,7 @@ function Orders({ api }) {
             ))}</tbody>
           </table></div>
         )}
-        <p className="ad-note">An order can only be confirmed or fulfilled after Razorpay has verified its payment. Payment status cannot be set by hand.</p>
+        <p className="ad-note">Only orders whose payment was successful (verified by the server) are listed here. Payment status cannot be set by hand.</p>
       </>)}</State>
     </>
   )
@@ -125,7 +122,7 @@ function Payments({ api }) {
     <>
       <header className="ad-head"><h1>Payments</h1></header>
       <State st={st}>{() => (<>
-        {!st.data.payments.length ? <Empty>No payments yet</Empty> : (
+        {!st.data.payments.length ? <Empty>No successful payments yet</Empty> : (
           <div className="ad-table"><table>
             <thead><tr><th>Payment ID</th><th>Order ID</th><th>Customer</th><th>Amount</th><th>Razorpay Payment ID</th><th>Razorpay Order ID</th><th>Status</th><th>Time</th></tr></thead>
             <tbody>{st.data.payments.map((p) => (
@@ -332,10 +329,10 @@ export default function AdminApp() {
   const [state, setState] = useState('checking') // checking | ok | denied | error
   const tried = useRef(false)
   useEffect(() => {
-    if (!acct.loaded || !acct.signedIn || tried.current) return
+    if (!acct.loaded || !acct.member || tried.current) return
     tried.current = true
     api('/api/admin/me').then(() => setState('ok')).catch((e) => setState(e.status === 403 || e.status === 401 ? 'denied' : 'error'))
-  }, [acct.loaded, acct.signedIn, api])
+  }, [acct.loaded, acct.member, api])
   useEffect(() => { // anyone else is sent back to the customer site
     if (state !== 'denied') return
     const t = setTimeout(() => window.location.replace('/'), 2500)
@@ -343,7 +340,8 @@ export default function AdminApp() {
   }, [state])
 
   if (!acct.loaded) return <Gate title="Super Admin" text="Loading…" />
-  if (!acct.signedIn) return <Gate title="Super Admin" text="Sign in with the authorized account to continue." action={<button className="ad-btn" onClick={acct.signIn}>Sign in</button>} />
+  // the admin area needs a real (Clerk) sign-in: a name + mobile customer profile is never an admin
+  if (!acct.member) return <><AccountDialog /><Gate title="Super Admin" text="Sign in with the authorized account to continue." action={<button className="ad-btn" onClick={() => openAccount('signin')}>Sign in</button>} /></>
   if (state === 'checking') return <Gate title="Super Admin" text="Checking access…" />
   if (state === 'denied') return <Gate title="Unauthorized" text="This account does not have access to the admin area. Taking you back to the LUMA website…" />
   if (state === 'error') return <Gate title="Something went wrong" text="The admin service could not be reached. Please try again." action={<button className="ad-btn" onClick={() => window.location.reload()}>Retry</button>} />
